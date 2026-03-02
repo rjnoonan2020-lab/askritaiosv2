@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RITA | Member Access</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="header">
+      <h1>RITA</h1>
+      <p class="sub">Member access • Retirement transition guidance</p>
+    </header>
+
+    <section class="card">
+      <label for="question" class="label">Your question</label>
+      <textarea id="question" class="textarea" rows="6"
+        placeholder="Ask your question…"></textarea>
+
+      <div class="row">
+        <button id="askBtn" class="btn" disabled>Ask RITA</button>
+        <button id="clearBtn" class="btn secondary" type="button">Clear</button>
+        <span id="status" class="status"></span>
+      </div>
+
+      <div style="margin-top:12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;">
+        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+          <input id="consent" type="checkbox" style="margin-top:3px;">
+          <span style="color:#a9b4c7;line-height:1.35;">
+            I understand RITA provides educational guidance for the non-financial side of retirement and is not financial, legal, or tax advice.
+          </span>
+        </label>
+
+        <div style="margin-top:10px;color:#a9b4c7;font-size:14px;">
+          <a href="/privacy.html">Privacy</a> |
+          <a href="/terms.html">Terms</a> |
+          <a href="/support.html">Support</a> |
+          <a href="/delete.html">Delete my data</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="h2">RITA’s response</h2>
+      <div id="answer" class="answer muted">Your answer will appear here.</div>
+    </section>
+
+    <footer class="footer">
+      <small>© Third Act Advisors • Ask-RITA.ai</small>
+    </footer>
+  </main>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

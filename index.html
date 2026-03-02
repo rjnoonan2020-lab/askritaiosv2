@@ -1,1 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ask-RITA</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="header">
+      <h1>Ask-RITA</h1>
+      <p class="sub">
+        Ask a retirement transition question and get a clear, practical answer.
+      </p>
+    </header>
 
+    <section class="card">
+      <label for="question" class="label">Your question</label>
+      <textarea
+        id="question"
+        class="textarea"
+        rows="6"
+        placeholder="Example: I’m retiring in 12 months. What should I focus on first to prepare for the non-financial side of retirement?"
+      ></textarea>
+
+      <div class="row">
+        <button id="askBtn" class="btn">Ask RITA</button>
+        <button id="clearBtn" class="btn secondary" type="button">Clear</button>
+        <span id="status" class="status"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="h2">RITA’s response</h2>
+      <div id="answer" class="answer muted">
+        Your answer will appear here.
+      </div>
+    </section>
+
+    <footer class="footer">
+      <small>© Third Act Advisors • Ask-RITA.ai</small>
+    </footer>
+  </main>
+
+  <script src="/assets/app.js"></script>
+</body>
+</html>

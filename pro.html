@@ -3,47 +3,100 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RITA | Member Access</title>
+  <title>RITA Pro</title>
   <link rel="stylesheet" href="/assets/styles.css" />
+  <style>
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; margin: 6px 0 10px; }
+    .tabbtn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(9,12,18,.35);
+      color:#e9eef7;
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight:650;
+      font-size: 14px;
+    }
+    .tabbtn.active{
+      border-color: rgba(220,20,60,.6);
+      background: rgba(220,20,60,.18);
+    }
+    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 880px){ .grid2{ grid-template-columns:1fr; } }
+    .small { color: var(--muted); font-size: 14px; }
+    .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top: 10px; }
+    .pill {
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 10px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .input { width:100%; border-radius: 14px; border: 1px solid var(--border); padding: 10px 12px; font-size: 14px; color: var(--text); background: rgba(9,12,18,.65); outline: none; }
+    .input:focus{ border-color:#3a5582; }
+  </style>
 </head>
 <body>
   <main class="wrap">
     <header class="header">
-      <h1>RITA</h1>
-      <p class="sub">Member access • Retirement transition guidance</p>
+      <h1>RITA Pro</h1>
+      <p class="sub">A toolbox for the non-financial side of retirement transition.</p>
     </header>
 
     <section class="card">
-      <label for="question" class="label">Your question</label>
-      <textarea id="question" class="textarea" rows="6"
-        placeholder="Ask your question…"></textarea>
+      <div class="tabs" id="tabs"></div>
 
-      <div class="row">
-        <button id="askBtn" class="btn" disabled>Ask RITA</button>
-        <button id="clearBtn" class="btn secondary" type="button">Clear</button>
-        <span id="status" class="status"></span>
-      </div>
+      <div class="grid2">
+        <div>
+          <div class="small" id="toolDesc"></div>
 
-      <div style="margin-top:12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;">
-        <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
-          <input id="consent" type="checkbox" style="margin-top:3px;">
-          <span style="color:#a9b4c7;line-height:1.35;">
-            I understand RITA provides educational guidance for the non-financial side of retirement and is not financial, legal, or tax advice.
-          </span>
-        </label>
+          <label class="label" style="margin-top:10px;">What is your situation?</label>
+          <textarea id="context" class="textarea" rows="7" placeholder="Example: Retiring in 10 months. I want structure, purpose, and to stay engaged. I am unsure how to fill my time and maintain relationships."></textarea>
 
-        <div style="margin-top:10px;color:#a9b4c7;font-size:14px;">
-          <a href="/privacy.html">Privacy</a> |
-          <a href="/terms.html">Terms</a> |
-          <a href="/support.html">Support</a> |
-          <a href="/delete.html">Delete my data</a>
+          <div style="margin-top:12px;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;">
+            <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
+              <input id="consent" type="checkbox" style="margin-top:3px;">
+              <span style="color:#a9b4c7;line-height:1.35;">
+                I understand RITA provides educational guidance for the non-financial side of retirement and is not financial, legal, or tax advice.
+              </span>
+            </label>
+
+            <div style="margin-top:10px;color:#a9b4c7;font-size:14px;">
+              <a href="/privacy.html">Privacy</a> |
+              <a href="/terms.html">Terms</a> |
+              <a href="/support.html">Support</a> |
+              <a href="/delete.html">Delete my data</a>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button id="runBtn" class="btn" disabled>Run tool</button>
+            <button id="clearBtn" class="btn secondary" type="button">Clear</button>
+            <span class="status" id="status"></span>
+          </div>
+
+          <div class="toolbar">
+            <span class="pill">Save: <strong id="saveState">On</strong></span>
+
+            <button id="copyBtn" class="btn secondary" type="button">Copy</button>
+            <button id="downloadBtn" class="btn secondary" type="button">Download .txt</button>
+          </div>
+
+          <div class="toolbar">
+            <span class="small">Feedback:</span>
+            <button id="upBtn" class="btn secondary" type="button">👍</button>
+            <button id="downBtn" class="btn secondary" type="button">👎</button>
+            <input id="fbText" class="input" placeholder="Optional: what should improve?" />
+            <button id="fbSend" class="btn secondary" type="button">Send</button>
+          </div>
+
+        </div>
+
+        <div>
+          <h2 class="h2">Output</h2>
+          <div id="output" class="answer muted">Your output will appear here.</div>
         </div>
       </div>
-    </section>
-
-    <section class="card">
-      <h2 class="h2">RITA’s response</h2>
-      <div id="answer" class="answer muted">Your answer will appear here.</div>
     </section>
 
     <footer class="footer">
@@ -51,6 +104,6 @@
     </footer>
   </main>
 
-  <script src="/assets/app.js"></script>
+  <script src="/assets/pro.js"></script>
 </body>
 </html>

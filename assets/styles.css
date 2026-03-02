@@ -1,148 +1,182 @@
-
-/* ===============================
-   RITA Base Theme
-   =============================== */
-
 :root{
-  --bg: #0f1724;
-  --panel: rgba(16, 24, 38, .85);
-  --panel-soft: rgba(16, 24, 38, .65);
+  --bg1: #0f1724;
+  --bg2: #121b2b;
+
+  --panel: rgba(16, 24, 38, .86);
+  --panel2: rgba(16, 24, 38, .68);
 
   --accent: #DC143C;
 
   --text: #E9EEF7;
-  --muted: rgba(233,238,247,.70);
+  --muted: rgba(233,238,247,.72);
+
   --border: rgba(255,255,255,.12);
+  --border2: rgba(255,255,255,.18);
+
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 12px;
 }
 
-/* Reset */
-*{
-  box-sizing: border-box;
-}
+*{ box-sizing: border-box; }
 
 body{
-  margin:0;
+  margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  background: radial-gradient(circle at top, #162033 0%, #0f1724 60%);
   color: var(--text);
+  background: radial-gradient(circle at top, #1a2740 0%, var(--bg1) 55%, #0b1220 100%);
 }
 
-/* Layout */
+a{
+  color: rgba(233,238,247,.85);
+  text-decoration: none;
+}
+a:hover{ text-decoration: underline; }
 
 .wrap{
-  max-width: 1000px;
-  margin: 40px auto;
-  padding: 0 20px 60px;
+  max-width: 1040px;
+  margin: 36px auto;
+  padding: 0 18px 56px;
 }
 
 .header{
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
-
 .header h1{
   margin: 0 0 6px;
   font-size: 38px;
-  font-weight: 700;
+  font-weight: 780;
+  letter-spacing: .2px;
 }
-
 .sub{
-  margin:0;
+  margin: 0;
   color: var(--muted);
+  line-height: 1.45;
 }
-
-/* Cards */
 
 .card{
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 20px;
-  margin-bottom: 20px;
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 18px;
 }
-
-/* Typography */
 
 .h2{
   margin: 0 0 10px;
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 740;
 }
 
 .label{
-  display:block;
-  margin-bottom:6px;
-  font-weight:600;
+  display: block;
+  margin: 12px 0 6px;
+  font-weight: 700;
 }
-
-/* Inputs */
 
 .textarea,
 .input{
-  width:100%;
+  width: 100%;
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  background: var(--panel-soft);
+  background: var(--panel2);
   color: var(--text);
   font-size: 15px;
-  outline:none;
+  outline: none;
 }
-
 .textarea:focus,
 .input:focus{
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(220,20,60,.20);
+  border-color: rgba(220,20,60,.7);
+  box-shadow: 0 0 0 3px rgba(220,20,60,.18);
 }
-
-/* Buttons */
 
 .btn{
-  padding: 10px 16px;
-  border-radius: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
   border: none;
   background: var(--accent);
-  color: white;
-  font-weight: 600;
-  cursor:pointer;
-  transition: all .15s ease;
+  color: #fff;
+  font-weight: 720;
+  cursor: pointer;
+  transition: transform .12s ease, opacity .12s ease;
 }
-
-.btn:hover{
-  transform: translateY(-1px);
-  opacity:.95;
-}
+.btn:hover{ transform: translateY(-1px); opacity: .96; }
+.btn:disabled{ opacity: .55; cursor: not-allowed; transform: none; }
 
 .btn.secondary{
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border2);
   color: var(--text);
 }
 
-.btn:disabled{
-  opacity:.5;
-  cursor:not-allowed;
+.row{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 12px;
 }
-
-/* Status */
 
 .status{
-  margin-left: 8px;
-  font-size: 14px;
   color: var(--muted);
+  font-size: 14px;
+  margin-left: 6px;
 }
 
-/* Chat bubbles */
+.footer{
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 22px;
+}
+
+/* ===============================
+   Coach UI
+   =============================== */
+
+.coachShell{
+  display: grid;
+  grid-template-columns: 1.35fr .95fr;
+  gap: 14px;
+}
+@media (max-width: 960px){
+  .coachShell{ grid-template-columns: 1fr; }
+}
+
+.coachLeft,
+.coachRight{
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(16,24,38,.55);
+  padding: 14px;
+}
+
+.noticeBox{
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(9,12,18,.35);
+  padding: 12px;
+}
+
+.mini{
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
 
 .chat{
-  max-height: 420px;
-  overflow:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-bottom: 12px;
+  max-height: 460px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 6px;
+  margin-top: 12px;
 }
 
 .bubble{
-  max-width: 85%;
+  max-width: 86%;
   padding: 12px 14px;
   border-radius: 16px;
   border: 1px solid var(--border);
@@ -151,50 +185,68 @@ body{
 }
 
 .bubble.rita{
-  background: rgba(220,20,60,.12);
-  border-color: rgba(220,20,60,.35);
+  background: rgba(220,20,60,.11);
+  border-color: rgba(220,20,60,.28);
 }
 
 .bubble.you{
-  align-self:flex-end;
-  background: rgba(16,24,38,.95);
+  align-self: flex-end;
+  background: rgba(16,24,38,.92);
+  border-color: rgba(255,255,255,.14);
 }
 
-/* Commitments */
+.inputDock{
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 12px;
+}
+@media (max-width: 740px){
+  .inputDock{ grid-template-columns: 1fr; }
+}
+
+.commitList{
+  margin-top: 10px;
+}
 
 .commit{
-  display:flex;
-  gap:10px;
-  align-items:flex-start;
-  background: var(--panel-soft);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: start;
   padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(9,12,18,.35);
   margin-top: 10px;
+}
+@media (max-width: 740px){
+  .commit{ grid-template-columns: 1fr; }
 }
 
 select{
   border-radius: 10px;
   border: 1px solid var(--border);
-  background: var(--panel-soft);
+  background: rgba(16,24,38,.75);
   color: var(--text);
-  padding: 6px 8px;
+  padding: 8px 10px;
 }
 
-/* Footer */
-
-.footer{
-  text-align:center;
-  margin-top: 30px;
-  color: var(--muted);
-  font-size: 14px;
+/* Embed mode for GoDaddy iframe */
+body.embed{
+  background: transparent;
 }
-
-a{
-  color: var(--muted);
-  text-decoration:none;
+body.embed .wrap{
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
 }
-
-a:hover{
-  text-decoration:underline;
+body.embed .header{
+  padding: 14px 14px 0;
+}
+body.embed .card{
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
 }

@@ -35,21 +35,7 @@
       <small>© Third Act Advisors • Ask-RITA.ai</small>
     </footer>
   </main>
-
-  <script>
-    function initSupabase() {
-      const SUPABASE_URL = "https://rita-coach.supabase.co";
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdWJpYmprYXNvYXR0bWJxdXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0ODAyMDEsImV4cCI6MjA4ODA1NjIwMX0.djzKshGnvgxqmD6PiKP5tnW0gjgKdqHyQcA_MHTCqqs";
-      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-      const statusEl = document.getElementById("authStatus");
-      function setStatus(msg) { statusEl.textContent = msg; }
-
-      sb.auth.getSession().then(function(result) {
-        if (result.data.session) window.location.href = "/coach.html";
-      });
-
-      document.getElementById("signInBtn").addEventListener("click", async function() {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value.trim();
-        if (!email || !password) { setStatus("Please enter email and password."); return; }
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js" onload="initSupabase()"></script>
+  <script src="/assets/login.js"></script>
+</body>
+</html>

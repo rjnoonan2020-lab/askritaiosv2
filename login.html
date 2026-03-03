@@ -43,11 +43,9 @@
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-   const statusEl = document.getElementById("authStatus");
-
+    const statusEl = document.getElementById("authStatus");
     function setStatus(msg) { statusEl.textContent = msg; }
 
-    // If already signed in, go straight to coach
     sb.auth.getSession().then(({ data }) => {
       if (data.session) window.location.href = "/coach.html";
     });
@@ -80,6 +78,6 @@
       });
       if (error) setStatus(error.message);
     });
-  </script>
-</body>
-</html>
+  }
+</script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js" onload="initSupabase()"></script>

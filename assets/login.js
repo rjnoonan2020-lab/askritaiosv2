@@ -1,5 +1,5 @@
 function initSupabase() {
-  const SUPABASE_URL = "https://rita-coach.supabase.co";
+  const SUPABASE_URL = "https://wjubibjkasoattmbqurf.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdWJpYmprYXNvYXR0bWJxdXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0ODAyMDEsImV4cCI6MjA4ODA1NjIwMX0.djzKshGnvgxqmD6PiKP5tnW0gjgKdqHyQcA_MHTCqqs";
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

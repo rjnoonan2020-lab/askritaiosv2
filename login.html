@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RITA Coach — Sign In</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <main class="wrap" style="max-width:440px;">
+    <header class="header">
+      <h1>RITA Coach</h1>
+      <p class="sub">Sign in to continue your coaching journey.</p>
+    </header>
+    <section class="card" id="authBox">
+      <div id="emailForm">
+        <label class="label">Email</label>
+        <input id="email" type="email" class="input" placeholder="you@example.com" />
+        <label class="label" style="margin-top:12px;">Password</label>
+        <input id="password" type="password" class="input" placeholder="Password" />
+        <div class="row" style="margin-top:16px;flex-direction:column;gap:10px;">
+          <button id="signInBtn" class="btn">Sign In</button>
+          <button id="signUpBtn" class="btn secondary">Create Account</button>
+        </div>
+        <div style="text-align:center;margin-top:16px;">
+          <span class="mini">or</span>
+        </div>
+        <button id="appleBtn" class="btn" style="margin-top:10px;background:#000;color:#fff;width:100%;">
+          Sign in with Apple
+        </button>
+      </div>
+      <div id="authStatus" class="mini" style="margin-top:14px;text-align:center;"></div>
+    </section>
+    <footer class="footer">
+      <small>© Third Act Advisors • Ask-RITA.ai</small>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const statusEl = document.getElementById("authStatus");
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+
+    // If already signed in, go straight to coach
+    sb.auth.getSession().then(({ data }) => {
+      if (data.session) window.location.href = "/coach.html";
+    });
+
+    document.getElementById("signInBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!email || !password) return setStatus("Please enter email and password.");
+      setStatus("Signing in…");
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) return setStatus(error.message);
+      window.location.href = "/coach.html";
+    });
+
+    document.getElementById("signUpBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!email || !password) return setStatus("Please enter email and password.");
+      setStatus("Creating account…");
+      const { error } = await sb.auth.signUp({ email, password });
+      if (error) return setStatus(error.message);
+      setStatus("Account created! You can now sign in.");
+    });
+
+    document.getElementById("appleBtn").addEventListener("click", async () => {
+      setStatus("Redirecting to Apple…");
+      const { error } = await sb.auth.signInWithOAuth({
+        provider: "apple",
+        options: { redirectTo: "https://darling-dragon-f1fb92.netlify.app/coach.html" }
+      });
+      if (error) setStatus(error.message);
+    });
+  </script>
+</body>
+</html>

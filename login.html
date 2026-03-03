@@ -36,48 +36,20 @@
     </footer>
   </main>
 
-  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
-    const SUPABASE_URL = "https://rita-coach.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdWJpYmprYXNvYXR0bWJxdXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0ODAyMDEsImV4cCI6MjA4ODA1NjIwMX0.djzKshGnvgxqmD6PiKP5tnW0gjgKdqHyQcA_MHTCqqs";
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    function initSupabase() {
+      const SUPABASE_URL = "https://rita-coach.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdWJpYmprYXNvYXR0bWJxdXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0ODAyMDEsImV4cCI6MjA4ODA1NjIwMX0.djzKshGnvgxqmD6PiKP5tnW0gjgKdqHyQcA_MHTCqqs";
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const statusEl = document.getElementById("authStatus");
-    function setStatus(msg) { statusEl.textContent = msg; }
+      const statusEl = document.getElementById("authStatus");
+      function setStatus(msg) { statusEl.textContent = msg; }
 
-    sb.auth.getSession().then(({ data }) => {
-      if (data.session) window.location.href = "/coach.html";
-    });
-
-    document.getElementById("signInBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      if (!email || !password) return setStatus("Please enter email and password.");
-      setStatus("Signing in…");
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) return setStatus(error.message);
-      window.location.href = "/coach.html";
-    });
-
-    document.getElementById("signUpBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-      if (!email || !password) return setStatus("Please enter email and password.");
-      setStatus("Creating account…");
-      const { error } = await sb.auth.signUp({ email, password });
-      if (error) return setStatus(error.message);
-      setStatus("Account created! You can now sign in.");
-    });
-
-    document.getElementById("appleBtn").addEventListener("click", async () => {
-      setStatus("Redirecting to Apple…");
-      const { error } = await sb.auth.signInWithOAuth({
-        provider: "apple",
-        options: { redirectTo: "https://darling-dragon-f1fb92.netlify.app/coach.html" }
+      sb.auth.getSession().then(function(result) {
+        if (result.data.session) window.location.href = "/coach.html";
       });
-      if (error) setStatus(error.message);
-    });
-  }
-</script>
-<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js" onload="initSupabase()"></script>
+
+      document.getElementById("signInBtn").addEventListener("click", async function() {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        if (!email || !password) { setStatus("Please enter email and password."); return; }

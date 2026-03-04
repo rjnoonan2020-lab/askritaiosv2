@@ -21,6 +21,7 @@ exports.handler = async (event) => {
   const profile = payload.profile || {};
   const commitments = Array.isArray(payload.commitments) ? payload.commitments : [];
   const history = Array.isArray(payload.history) ? payload.history : [];
+  const shouldSuggestCommitments = history.length >= 4 && commitments.length === 0;
 
   const system = [
     "You are RITA, a warm and practical retirement transition coach for Third Act Advisors.",
@@ -38,7 +39,7 @@ exports.handler = async (event) => {
       "Your goal is to move from reflection toward action within 3-4 exchanges.",
       "After 2 exchanges, always suggest 1 to 3 specific weekly commitments.",
       "Commitments must be small, concrete actions completable within 7 days.",
-      "Example commitments: 'Call the engineering department at a local college to ask about mentoring', 'Play one round of golf this week', 'Spend 30 minutes researching IEEE mentoring programs'.",
+      "Example commitments: 'Visit the Museum of Science and Industry website and find the volunteer page', 'Call one local museum this week to ask about volunteer opportunities', 'Spend 20 minutes researching electricity exhibits near Chicago'.",
       "Always include commitment_suggestions in your JSON response after the second exchange.",
       "Ask one focused follow-up question AND provide the commitments — do both together.",
       "Never just answer like a search engine. Always coach toward a next step."
@@ -84,6 +85,7 @@ exports.handler = async (event) => {
             content:
               `MODE: ${mode}\n` +
               `INSTRUCTIONS: ${instruction}\n\n` +
+              `COMMITMENT_REQUIRED: ${shouldSuggestCommitments ? "YES — you MUST include commitment_suggestions in your response. This is mandatory. Suggest 1-3 specific actions the user can take this week based on the conversation so far." : "optional"}\n\n` +
               `CURRENT_PROFILE (may be empty): ${JSON.stringify(profile)}\n\n` +
               `CURRENT_COMMITMENTS: ${JSON.stringify(commitments)}\n\n` +
               `CONVERSATION_HISTORY (last 12 messages): ${JSON.stringify(history)}\n\n` +

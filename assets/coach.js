@@ -162,14 +162,12 @@ function renderCommitments() {
     return;
   }
   commits.forEach((c) => {
-    const card = document.createElement("div");
-    card.className = "commitment-card";
     card.innerHTML = `
       <div class="commitment-text">${c.text}</div>
       <div class="status-pills">
-        <button class="pill ${c.status === 'not_started' ? 'active-not_started' : ''}" data-status="not_started" data-id="${c.id}">Not started</button>
-        <button class="pill ${c.status === 'in_progress' ? 'active-in_progress' : ''}" data-status="in_progress" data-id="${c.id}">In progress</button>
-        <button class="pill ${c.status === 'done' ? 'active-done' : ''}" data-status="done" data-id="${c.id}">Done</button>
+        ${c.status !== 'done' ? `<button class="pill ${c.status === 'not_started' ? 'active-not_started' : ''}" data-status="not_started" data-id="${c.id}">Not started</button>` : ''}
+        ${c.status !== 'done' ? `<button class="pill ${c.status === 'in_progress' ? 'active-in_progress' : ''}" data-status="in_progress" data-id="${c.id}">In progress</button>` : ''}
+        <button class="pill ${c.status === 'done' ? 'active-done' : ''}" data-status="done" data-id="${c.id}" ${c.status === 'done' ? 'disabled style="opacity:1;cursor:default;"' : ''}>Done ✓</button>
       </div>`;
     commitsEl.appendChild(card);
   });

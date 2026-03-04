@@ -97,7 +97,7 @@ exports.handler = async (event) => {
               `INSTRUCTIONS: ${instruction}\n\n` +
               `USER_MESSAGE_COUNT: ${userMessageCount}\n` +
               `MUST_SUGGEST_COMMITMENTS: ${mustCommit ? "YES — commitment_suggestions is REQUIRED in your response" : "not yet"}\n\n` +
-              `CURRENT_PROFILE: ${JSON.stringify(profile)}\n\n` +
+              `FOCUS_AREA: The user has chosen to focus on "${focusArea}" today. Keep your coaching questions and commitment suggestions specifically relevant to this area.\n\n` +`CURRENT_PROFILE: ${JSON.stringify(profile)}\n\n` +
               `CURRENT_COMMITMENTS: ${JSON.stringify(commitments)}\n\n` +
               `CONVERSATION_HISTORY: ${JSON.stringify(history)}\n\n` +
               `USER_MESSAGE: ${userText}\n\n` +

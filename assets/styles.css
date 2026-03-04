@@ -632,3 +632,42 @@ body.embed .wrap{
   background: #fdf1f3;
   color: var(--accent);
 }
+/* ===============================
+   Focus Switcher Strip
+   =============================== */
+
+.focus-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.focus-switch-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--panel-soft);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+.focus-switch-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: #fdf1f3;
+}
+
+.focus-switch-btn.current {
+  border-color: var(--accent);
+  background: #fdf1f3;
+  color: var(--accent);
+}

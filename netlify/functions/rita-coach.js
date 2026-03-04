@@ -35,8 +35,7 @@ exports.handler = async (event) => {
   const commitCount = isActionArea ? "2 or 3" : "1 or 2";
 
   // Add slight randomness to timing — occasionally wait one extra exchange
-  const randomDelay = Math.random() > 0.6 ? 1 : 0;
-  const mustCommitFinal = userMessageCount >= (commitThreshold + randomDelay) && commitments.length === 0;
+  const mustCommitFinal = userMessageCount >= commitThreshold && commitments.length === 0;
 
   const system = [
     "You are RITA, a warm and practical retirement transition coach for Third Act Advisors.",

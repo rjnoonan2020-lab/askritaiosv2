@@ -334,7 +334,9 @@ sendBtn.addEventListener("click", async function() {
     if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       var newCommits = data.commitment_suggestions.slice(0, 3).map(function(t) {
-        return { text: t, status: "not_started", area: state.focusArea };
+        var text = typeof t === "object" ? t.text : t;
+        var area = typeof t === "object" && t.area ? t.area : state.focusArea;
+        return { text: text, status: "not_started", area: area };
       });
       await appendCommitments(newCommits);
       var notify = document.createElement("div");
@@ -394,7 +396,9 @@ newWeekBtn.addEventListener("click", async function() {
     if (data.action === "reset_commitments") await clearCommitments();
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       await appendCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) {
-        return { text: t, status: "not_started", area: state.focusArea };
+        var text = typeof t === "object" ? t.text : t;
+        var area = typeof t === "object" && t.area ? t.area : state.focusArea;
+        return { text: text, status: "not_started", area: area };
       }));
     }
     renderCommitments();

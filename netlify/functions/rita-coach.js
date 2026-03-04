@@ -29,7 +29,7 @@ exports.handler = async (event) => {
 
   // Action areas: suggest after 3 user messages, 2-3 commits
   // Reflection areas: suggest after 4 user messages, 1-2 commits
-  const userMessageCount = history.filter(function(m) { return m.role === "user"; }).length;
+  const userMessageCount = history.filter(function(m) { return m.role === "user" || m.role === "you"; }).length;
   const commitThreshold = isActionArea ? 3 : 4;
   const mustCommit = userMessageCount >= commitThreshold && commitments.length === 0;
   const commitCount = isActionArea ? "2 or 3" : "1 or 2";

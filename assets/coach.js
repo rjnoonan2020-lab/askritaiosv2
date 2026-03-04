@@ -58,6 +58,14 @@ var state = {
 var currentUser = null;
 var busy = false;
 
+function getWeekOf() {
+  var now = new Date();
+  var day = now.getDay();
+  var diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  var monday = new Date(now.setDate(diff));
+  return monday.toISOString().split("T")[0];
+}
+
 async function initAuth() {
   var result = await sb.auth.getSession();
   if (!result.data.session) { window.location.href = "/login.html"; return; }
@@ -123,7 +131,7 @@ async function startFocusArea(area) {
       state.history.push({ role: "assistant", text: opener });
       await saveHistory("assistant", opener);
     } catch(e) {
-      var fallback = FOCUS_OPENERS[area] || "Welcome back! What would you like to explore today?";
+      var fallback = FOCUS_OPENERS[area];
       addBubble(fallback, "rita");
       state.history.push({ role: "assistant", text: fallback });
       await saveHistory("assistant", fallback);
@@ -149,9 +157,7 @@ async function loadAreaHistory(area) {
       .limit(20);
     if (!r.data || !r.data.length) return [];
     return r.data.reverse().map(function(row) { return { role: row.role, text: row.content }; });
-  } catch(e) {
-    return [];
-  }
+  } catch(e) { return []; }
 }
 
 document.querySelectorAll(".focus-card").forEach(function(card) {
@@ -167,8 +173,16 @@ signOutBtn.addEventListener("click", async function() {
 
 async function loadState() {
   try {
-    var r2 = await sb.from("commitments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: true });
-    if (r2.data && r2.data.length) state.weekly_momentum.commitments = r2.data.map(function(c) { return { id: c.id, text: c.text, status: c.status, area: c.area }; });
+    var r = await sb.from("commitments")
+      .select("*")
+      .eq("user_id", currentUser.id)
+      .eq("week_of", getWeekOf())
+      .order("created_at", { ascending: true });
+    if (r.data && r.data.length) {
+      state.weekly_momentum.commitments = r.data.map(function(c) {
+        return { id: c.id, text: c.text, status: c.status, area: c.area, week_of: c.week_of };
+      });
+    }
   } catch(e) { console.error("Load error", e); }
 }
 
@@ -182,18 +196,34 @@ async function saveHistory(role, content) {
   });
 }
 
-async function saveCommitments(commitments) {
+async function appendCommitments(newCommitments) {
+  if (!currentUser || !newCommitments.length) return;
+  var weekOf = getWeekOf();
+  await sb.from("commitments").insert(newCommitments.map(function(c) {
+    return {
+      user_id: currentUser.id,
+      text: c.text,
+      status: c.status || "not_started",
+      area: c.area || state.focusArea,
+      week_of: weekOf
+    };
+  }));
+  var r = await sb.from("commitments")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .eq("week_of", weekOf)
+    .order("created_at", { ascending: true });
+  if (r.data) {
+    state.weekly_momentum.commitments = r.data.map(function(c) {
+      return { id: c.id, text: c.text, status: c.status, area: c.area, week_of: c.week_of };
+    });
+  }
+}
+
+async function clearCommitments() {
   if (!currentUser) return;
   await sb.from("commitments").delete().eq("user_id", currentUser.id);
-  if (commitments.length) {
-    await sb.from("commitments").insert(commitments.map(function(c) {
-      return { user_id: currentUser.id, text: c.text, status: c.status || "not_started", area: c.area || state.focusArea };
-    }));
-    var r = await sb.from("commitments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: true });
-    if (r.data) state.weekly_momentum.commitments = r.data.map(function(c) { return { id: c.id, text: c.text, status: c.status, area: c.area }; });
-  } else {
-    state.weekly_momentum.commitments = [];
-  }
+  state.weekly_momentum.commitments = [];
 }
 
 async function updateCommitmentStatus(id, status) {
@@ -228,20 +258,36 @@ function renderCommitments() {
   commitsEl.innerHTML = "";
   var commits = state.weekly_momentum.commitments;
   if (!commits.length) {
-    commitsEl.innerHTML = '<div class="empty-state">No active commitments yet.<br>RITA will suggest some during your coaching conversation.</div>';
+    commitsEl.innerHTML = '<div class="empty-state">No commitments this week yet.<br>RITA will suggest some during your coaching conversation.</div>';
     return;
   }
+
+  // Group by area
+  var areas = [];
+  var grouped = {};
   commits.forEach(function(c) {
-    var card = document.createElement("div");
-    card.className = "commitment-card";
-    var areaTag = c.area ? '<span class="commit-area-tag">' + c.area + '</span>' : '';
-    if (c.status === "done") {
-      card.innerHTML = areaTag + '<div class="commitment-text">' + c.text + '</div><div class="status-pills"><button class="pill active-done" disabled>Done</button></div>';
-    } else {
-      card.innerHTML = areaTag + '<div class="commitment-text">' + c.text + '</div><div class="status-pills"><button class="pill ' + (c.status === "not_started" ? "active-not_started" : "") + '" data-status="not_started" data-id="' + c.id + '">Not started</button><button class="pill ' + (c.status === "in_progress" ? "active-in_progress" : "") + '" data-status="in_progress" data-id="' + c.id + '">In progress</button><button class="pill" data-status="done" data-id="' + c.id + '">Done</button></div>';
-    }
-    commitsEl.appendChild(card);
+    var a = c.area || "General";
+    if (!grouped[a]) { grouped[a] = []; areas.push(a); }
+    grouped[a].push(c);
   });
+
+  areas.forEach(function(area) {
+    var section = document.createElement("div");
+    section.className = "commit-section";
+    section.innerHTML = '<div class="commit-section-title">' + area + '</div>';
+    grouped[area].forEach(function(c) {
+      var card = document.createElement("div");
+      card.className = "commitment-card";
+      if (c.status === "done") {
+        card.innerHTML = '<div class="commitment-text">' + c.text + '</div><div class="status-pills"><button class="pill active-done" disabled>Done ✓</button></div>';
+      } else {
+        card.innerHTML = '<div class="commitment-text">' + c.text + '</div><div class="status-pills"><button class="pill ' + (c.status === "not_started" ? "active-not_started" : "") + '" data-status="not_started" data-id="' + c.id + '">Not started</button><button class="pill ' + (c.status === "in_progress" ? "active-in_progress" : "") + '" data-status="in_progress" data-id="' + c.id + '">In progress</button><button class="pill" data-status="done" data-id="' + c.id + '">Done</button></div>';
+      }
+      section.appendChild(card);
+    });
+    commitsEl.appendChild(section);
+  });
+
   commitsEl.querySelectorAll(".pill:not([disabled])").forEach(function(pill) {
     pill.addEventListener("click", async function() {
       var id = pill.dataset.id;
@@ -287,11 +333,10 @@ sendBtn.addEventListener("click", async function() {
     var data = await callCoach(text, "coach");
     if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
-      var existing = state.weekly_momentum.commitments.slice();
       var newCommits = data.commitment_suggestions.slice(0, 3).map(function(t) {
         return { text: t, status: "not_started", area: state.focusArea };
       });
-      await saveCommitments(existing.concat(newCommits));
+      await appendCommitments(newCommits);
       var notify = document.createElement("div");
       notify.className = "commit-notify";
       notify.textContent = "\u2713 " + newCommits.length + " commitment" + (newCommits.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
@@ -320,7 +365,7 @@ checkinBtn.addEventListener("click", async function() {
   if (busy) return;
   if (!state.weekly_momentum.commitments.length) { setStatus("No commitments yet."); return; }
   setBusy(true);
-  setStatus("Running check-in\u2026");
+  setStatus("RITA is reviewing your week\u2026");
   try {
     var data = await callCoach("", "checkin");
     var reply = data.coach_message || "How did this week feel?";
@@ -339,16 +384,16 @@ checkinBtn.addEventListener("click", async function() {
 newWeekBtn.addEventListener("click", async function() {
   if (busy) return;
   setBusy(true);
-  setStatus("Thinking\u2026");
+  setStatus("Preparing your new week\u2026");
   try {
     var data = await callCoach("", "keep_or_reset");
     var reply = data.coach_message || "Would you like to keep or reset?";
     addBubble(reply, "rita");
     state.history.push({ role: "assistant", text: reply });
     await saveHistory("assistant", reply);
-    if (data.action === "reset_commitments") await saveCommitments([]);
+    if (data.action === "reset_commitments") await clearCommitments();
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
-      await saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) {
+      await appendCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) {
         return { text: t, status: "not_started", area: state.focusArea };
       }));
     }
@@ -363,9 +408,9 @@ newWeekBtn.addEventListener("click", async function() {
 });
 
 resetBtn.addEventListener("click", async function() {
-  if (!confirm("Reset your entire RITA Coach session? This cannot be undone.")) return;
+  if (!confirm("This will clear your entire coaching history and all commitments. Are you sure?")) return;
   await sb.from("conversation_history").delete().eq("user_id", currentUser.id);
-  await saveCommitments([]);
+  await clearCommitments();
   state.history = [];
   state.focusArea = null;
   state.memory = { timeline_note: "", themes: [], interests: [], constraints: [], people: [] };

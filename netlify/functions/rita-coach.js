@@ -21,7 +21,10 @@ exports.handler = async (event) => {
   const profile = payload.profile || {};
   const commitments = Array.isArray(payload.commitments) ? payload.commitments : [];
   const history = Array.isArray(payload.history) ? payload.history : [];
-  const shouldSuggestCommitments = history.length >= 4 && commitments.length === 0;
+
+  // Force commitments after 3 user messages
+  const userMessageCount = history.filter(m => m.role === "user").length;
+  const mustCommit = userMessageCount >= 3;
 
   const system = [
     "You are RITA, a warm and practical retirement transition coach for Third Act Advisors.",
@@ -34,16 +37,22 @@ exports.handler = async (event) => {
   ].join(" ");
 
   const modeInstructions = {
-    coach: [
-      "You are in an ongoing coaching conversation with a retiree.",
-      "Your goal is to move from reflection toward action within 3-4 exchanges.",
-      "After 2 exchanges, always suggest 1 to 3 specific weekly commitments.",
-      "Commitments must be small, concrete actions completable within 7 days.",
-      "Example commitments: 'Visit the Museum of Science and Industry website and find the volunteer page', 'Call one local museum this week to ask about volunteer opportunities', 'Spend 20 minutes researching electricity exhibits near Chicago'.",
-      "Always include commitment_suggestions in your JSON response after the second exchange.",
-      "Ask one focused follow-up question AND provide the commitments — do both together.",
-      "Never just answer like a search engine. Always coach toward a next step."
-    ].join(" "),
+    coach: mustCommit
+      ? [
+          "You have enough information to suggest commitments NOW.",
+          "Based on the conversation so far, suggest exactly 2-3 specific, small weekly commitments.",
+          "Commitments must be concrete actions completable within 7 days.",
+          "Good examples based on this conversation: 'Check the coffee shop schedule online tonight', 'Plan to attend music night on Tuesday', 'Text one friend to join you at the coffee shop'.",
+          "Keep your coach_message short — one warm sentence of encouragement plus the commitments.",
+          "You MUST include commitment_suggestions in your JSON. This is not optional.",
+          "Do NOT ask another question. It is time to act."
+        ].join(" ")
+      : [
+          "You are in an ongoing coaching conversation with a retiree.",
+          "Ask one warm, focused question to understand what matters most to them.",
+          "After 3 user messages you will be required to suggest commitments, so gather what you need now.",
+          "Keep responses concise and warm."
+        ].join(" "),
     checkin: [
       "This is a weekly check-in.",
       "You will be given commitments with statuses: not_started, in_progress, done.",
@@ -57,6 +66,7 @@ exports.handler = async (event) => {
       "If most are unfinished, normalize it warmly and offer either keeping one small commitment or resetting.",
       "If some are done, celebrate and offer keeping and refining the rest.",
       "If all are done, offer a slightly more ambitious set of 1 to 3 new commitments.",
+      "Always include commitment_suggestions in your response.",
       "Always end with a specific suggestion for next week."
     ].join(" "),
   };
@@ -66,7 +76,7 @@ exports.handler = async (event) => {
   const jsonSchemaHint = {
     coach_message: "string — your coaching response",
     memory_update: { "optional_profile_fields": "values to remember about this user" },
-    commitment_suggestions: ["up to 3 specific action strings"],
+    commitment_suggestions: ["up to 3 specific action strings — REQUIRED when mustCommit is true"],
     action: "optional string: reset_commitments | keep_commitments"
   };
 
@@ -85,12 +95,13 @@ exports.handler = async (event) => {
             content:
               `MODE: ${mode}\n` +
               `INSTRUCTIONS: ${instruction}\n\n` +
-              `COMMITMENT_REQUIRED: ${shouldSuggestCommitments ? "YES — you MUST include commitment_suggestions in your response. This is mandatory. Suggest 1-3 specific actions the user can take this week based on the conversation so far." : "optional"}\n\n` +
-              `CURRENT_PROFILE (may be empty): ${JSON.stringify(profile)}\n\n` +
+              `USER_MESSAGE_COUNT: ${userMessageCount}\n` +
+              `MUST_SUGGEST_COMMITMENTS: ${mustCommit ? "YES — commitment_suggestions is REQUIRED in your response" : "not yet"}\n\n` +
+              `CURRENT_PROFILE: ${JSON.stringify(profile)}\n\n` +
               `CURRENT_COMMITMENTS: ${JSON.stringify(commitments)}\n\n` +
-              `CONVERSATION_HISTORY (last 12 messages): ${JSON.stringify(history)}\n\n` +
+              `CONVERSATION_HISTORY: ${JSON.stringify(history)}\n\n` +
               `USER_MESSAGE: ${userText}\n\n` +
-              `Return JSON matching this shape (omit keys not needed):\n${JSON.stringify(jsonSchemaHint)}`
+              `Return JSON:\n${JSON.stringify(jsonSchemaHint)}`
           }
         ]
       })

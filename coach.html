@@ -5,75 +5,170 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RITA Coach</title>
   <link rel="stylesheet" href="/assets/styles.css" />
-</head>
+  <style>
+    .coach-container {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+    }
 
-<body>
-  <main class="wrap">
-    <header class="header">
-      <h1>RITA Coach</h1>
-      <p class="sub">A gentle accountability partner for your next chapter.</p>
-    </header>
+    .rita-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 0 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
 
-    <section class="card">
-      <div class="coachShell">
+    .rita-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: top;
+      border: 3px solid var(--accent);
+      margin-bottom: 10px;
+    }
 
-        <!-- LEFT: Coaching conversation -->
-        <div class="coachLeft">
-          <div class="noticeBox">
-            <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;">
-              <input id="consent" type="checkbox" style="margin-top:3px;">
-              <span class="mini">
-                I understand RITA provides educational guidance for the non-financial side of retirement and is not financial, legal, or tax advice.
-              </span>
-            </label>
+    .rita-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0;
+    }
 
-            <div class="mini" style="margin-top:10px;">
-              <a href="/privacy.html">Privacy</a> |
-              <a href="/terms.html">Terms</a> |
-              <a href="/support.html">Support</a> |
-              <a href="/delete.html">Delete my data</a>
-            </div>
-          </div>
+    .rita-tagline {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 2px 0 0;
+    }
 
-          <div id="chat" class="chat"></div>
+    .nav-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
-          <div class="inputDock">
-            <textarea id="msg" class="textarea" rows="3" placeholder="Type your reply…"></textarea>
-            <button id="send" class="btn" disabled>Send</button>
-            <button id="reset" class="btn secondary" type="button">Reset</button>
-          </div>
+    .nav-tab {
+      flex: 1;
+      padding: 14px 10px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all .15s ease;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
 
-          <div class="row">
-            <span id="status" class="status"></span>
-          </div>
-        </div>
+    .nav-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
 
-        <!-- RIGHT: Weekly Momentum -->
-        <div class="coachRight">
-          <h2 class="h2">Weekly Momentum</h2>
-          <div class="mini">RITA suggests 1 to 3 commitments. You can edit them.</div>
+    .tab-panel {
+      display: none;
+      padding: 20px 0;
+    }
 
-          <div id="commitments" class="commitList"></div>
+    .tab-panel.active {
+      display: block;
+    }
 
-          <div class="row">
-            <button id="checkin" class="btn secondary" type="button">Run Weekly Check-In</button>
-            <button id="newWeek" class="btn secondary" type="button">Keep or Reset</button>
-          </div>
-        </div>
+    /* Chat */
+    .chat {
+      min-height: 340px;
+      max-height: 440px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 4px 0 16px;
+    }
 
-      </div>
-    </section>
+    .bubble {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 20px;
+      line-height: 1.5;
+      font-size: 15px;
+      white-space: pre-wrap;
+    }
 
-    <footer class="footer">
-      <small>© Third Act Advisors • Ask-RITA.ai</small>
-    </footer>
-  </main>
+    .bubble.rita {
+      background: #fdf1f3;
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+    }
 
-  <script>
-    // Embed mode for GoDaddy iframe
-    if (window.self !== window.top) document.body.classList.add("embed");
-  </script>
+    .bubble.you {
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+      align-self: flex-end;
+    }
 
-  <script src="/assets/coach.js"></script>
-</body>
-</html>
+    .input-dock {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      margin-top: 12px;
+    }
+
+    .input-dock textarea {
+      flex: 1;
+      border-radius: 20px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+      font-size: 15px;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .input-dock textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(213,64,80,.15);
+    }
+
+    .send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: opacity .15s;
+    }
+
+    .send-btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    .send-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: #fff;
+    }
+
+    /* Commitments */
+    .commitment-card {
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px

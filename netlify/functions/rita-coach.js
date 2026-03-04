@@ -23,20 +23,15 @@ exports.handler = async (event) => {
   const history = Array.isArray(payload.history) ? payload.history : [];
   const focusArea = payload.focusArea || "General";
 
-  // Action-oriented vs reflection-oriented areas
   const actionAreas = ["Activity", "Time", "Connections", "Finance & Home"];
   const isActionArea = actionAreas.includes(focusArea);
 
-  // Action areas: suggest after 3 user messages, 2-3 commits
-  // Reflection areas: suggest after 4 user messages, 1-2 commits
   const userMessageCount = history.filter(function(m) { return m.role === "user" || m.role === "you"; }).length;
   const commitThreshold = isActionArea ? 3 : 4;
-  const mustCommit = userMessageCount >= commitThreshold && commitments.length === 0;
-  const commitCount = isActionArea ? "2 or 3" : "1 or 2";
-
-  // Add slight randomness to timing — occasionally wait one extra exchange
   const areaCommitments = commitments.filter(function(c) { return c.area === focusArea; });
   const mustCommitFinal = userMessageCount >= commitThreshold && areaCommitments.length === 0;
+  const commitCount = isActionArea ? "2 or 3" : "1 or 2";
+
   const system = [
     "You are RITA, a warm and practical retirement transition coach for Third Act Advisors.",
     "Your job is to help retirees move forward with gentle encouragement and light accountability.",
@@ -48,6 +43,14 @@ exports.handler = async (event) => {
   ].join(" ");
 
   const modeInstructions = {
+    returning: [
+      "The user is returning to the focus area: " + focusArea + ".",
+      "You have access to their recent conversation history in this area.",
+      "Generate a warm, personalized welcome back message that references something specific from their previous conversation.",
+      "Ask a fresh follow-up question that moves the conversation forward from where they left off.",
+      "Do NOT repeat the standard opener question. Make it feel like picking up a conversation with a trusted coach.",
+      "Keep it to 2-3 sentences maximum."
+    ].join(" "),
     coach: mustCommitFinal
       ? [
           "You have enough information to suggest commitments NOW.",

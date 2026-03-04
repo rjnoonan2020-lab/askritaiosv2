@@ -18,13 +18,25 @@ exports.handler = async (event) => {
 
   const mode = (payload.mode || "coach").trim();
   const userText = (payload.userText || "").trim();
-  const profile = payload.profile || {};const focusArea = payload.focusArea || "General";
+  const profile = payload.profile || {};
   const commitments = Array.isArray(payload.commitments) ? payload.commitments : [];
   const history = Array.isArray(payload.history) ? payload.history : [];
+  const focusArea = payload.focusArea || "General";
 
-  // Force commitments after 3 user messages
-  const userMessageCount = history.filter(m => m.role === "user").length;
-  const mustCommit = userMessageCount >= 3;
+  // Action-oriented vs reflection-oriented areas
+  const actionAreas = ["Activity", "Time", "Connections", "Finance & Home"];
+  const isActionArea = actionAreas.includes(focusArea);
+
+  // Action areas: suggest after 3 user messages, 2-3 commits
+  // Reflection areas: suggest after 4 user messages, 1-2 commits
+  const userMessageCount = history.filter(function(m) { return m.role === "user"; }).length;
+  const commitThreshold = isActionArea ? 3 : 4;
+  const mustCommit = userMessageCount >= commitThreshold && commitments.length === 0;
+  const commitCount = isActionArea ? "2 or 3" : "1 or 2";
+
+  // Add slight randomness to timing — occasionally wait one extra exchange
+  const randomDelay = Math.random() > 0.6 ? 1 : 0;
+  const mustCommitFinal = userMessageCount >= (commitThreshold + randomDelay) && commitments.length === 0;
 
   const system = [
     "You are RITA, a warm and practical retirement transition coach for Third Act Advisors.",
@@ -37,24 +49,26 @@ exports.handler = async (event) => {
   ].join(" ");
 
   const modeInstructions = {
-    coach: mustCommit
+    coach: mustCommitFinal
       ? [
           "You have enough information to suggest commitments NOW.",
-          "Based on the conversation so far, suggest exactly 2-3 specific, small weekly commitments.",
-          "Commitments must be concrete actions completable within 7 days.",
-          "Good examples based on this conversation: 'Check the coffee shop schedule online tonight', 'Plan to attend music night on Tuesday', 'Text one friend to join you at the coffee shop'.",
-          "Keep your coach_message short — one warm sentence of encouragement plus the commitments.",
+          "The user is focused on: " + focusArea + ".",
+          isActionArea
+            ? "This is an action-oriented topic. Suggest " + commitCount + " specific, concrete commitments completable within 7 days."
+            : "This is a reflection-oriented topic. Suggest " + commitCount + " gentle, meaningful commitments — these may include journaling, a single conversation, or one small exploratory action.",
+          "Keep your coach_message to one warm sentence of encouragement.",
           "You MUST include commitment_suggestions in your JSON. This is not optional.",
           "Do NOT ask another question. It is time to act."
         ].join(" ")
       : [
-          "You are in an ongoing coaching conversation with a retiree.",
-          "Ask one warm, focused question to understand what matters most to them.",
-          "After 3 user messages you will be required to suggest commitments, so gather what you need now.",
-          "Keep responses concise and warm."
+          "You are coaching a retiree focused on: " + focusArea + ".",
+          isActionArea
+            ? "This is an action-oriented topic. Ask one focused practical question to understand what specific steps or barriers the user is facing."
+            : "This is a reflection-oriented topic. Ask one warm, open question that helps the user go deeper into what they're feeling or discovering.",
+          "Keep your response concise and warm. One question only."
         ].join(" "),
     checkin: [
-      "This is a weekly check-in.",
+      "This is a weekly check-in for the focus area: " + focusArea + ".",
       "You will be given commitments with statuses: not_started, in_progress, done.",
       "Acknowledge what was completed with genuine warmth.",
       "For anything not started or in progress, normalize it — there is no failure here.",
@@ -62,12 +76,14 @@ exports.handler = async (event) => {
       "End by asking whether the user wants to keep, adjust, or reset their commitments."
     ].join(" "),
     keep_or_reset: [
-      "User is deciding whether to keep, adjust, or reset commitments.",
+      "User is deciding whether to keep, adjust, or reset commitments for: " + focusArea + ".",
       "If most are unfinished, normalize it warmly and offer either keeping one small commitment or resetting.",
       "If some are done, celebrate and offer keeping and refining the rest.",
-      "If all are done, offer a slightly more ambitious set of 1 to 3 new commitments.",
-      "Always include commitment_suggestions in your response.",
-      "Always end with a specific suggestion for next week."
+      "If all are done, offer a new set of " + commitCount + " commitments appropriate for " + focusArea + ".",
+      isActionArea
+        ? "New commitments should be concrete, specific actions."
+        : "New commitments can include reflection, journaling, or one small exploratory step.",
+      "Always include commitment_suggestions in your response."
     ].join(" "),
   };
 
@@ -76,7 +92,7 @@ exports.handler = async (event) => {
   const jsonSchemaHint = {
     coach_message: "string — your coaching response",
     memory_update: { "optional_profile_fields": "values to remember about this user" },
-    commitment_suggestions: ["up to 3 specific action strings — REQUIRED when mustCommit is true"],
+    commitment_suggestions: ["array of " + commitCount + " specific action strings — REQUIRED when mustCommit is true"],
     action: "optional string: reset_commitments | keep_commitments"
   };
 
@@ -86,7 +102,7 @@ exports.handler = async (event) => {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
-        temperature: 0.6,
+        temperature: 0.7,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: system },
@@ -94,10 +110,13 @@ exports.handler = async (event) => {
             role: "user",
             content:
               `MODE: ${mode}\n` +
+              `FOCUS_AREA: ${focusArea}\n` +
+              `AREA_TYPE: ${isActionArea ? "action-oriented" : "reflection-oriented"}\n` +
               `INSTRUCTIONS: ${instruction}\n\n` +
               `USER_MESSAGE_COUNT: ${userMessageCount}\n` +
-              `MUST_SUGGEST_COMMITMENTS: ${mustCommit ? "YES — commitment_suggestions is REQUIRED in your response" : "not yet"}\n\n` +
-              `FOCUS_AREA: The user has chosen to focus on "${focusArea}" today. Keep your coaching questions and commitment suggestions specifically relevant to this area.\n\n` +`CURRENT_PROFILE: ${JSON.stringify(profile)}\n\n` +
+              `MUST_SUGGEST_COMMITMENTS: ${mustCommitFinal ? "YES — commitment_suggestions is REQUIRED" : "not yet"}\n` +
+              `COMMIT_COUNT_IF_SUGGESTING: ${commitCount}\n\n` +
+              `CURRENT_PROFILE: ${JSON.stringify(profile)}\n\n` +
               `CURRENT_COMMITMENTS: ${JSON.stringify(commitments)}\n\n` +
               `CONVERSATION_HISTORY: ${JSON.stringify(history)}\n\n` +
               `USER_MESSAGE: ${userText}\n\n` +

@@ -5,170 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RITA Coach</title>
   <link rel="stylesheet" href="/assets/styles.css" />
-  <style>
-    .coach-container {
-      max-width: 580px;
-      margin: 0 auto;
-      padding: 0 16px 40px;
-    }
+</head>
+<body>
+  <div class="coach-container">
 
-    .rita-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 32px 0 20px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 0;
-    }
+    <div class="top-bar">
+      <button class="signout-btn" id="signOutBtn">Sign out</button>
+    </div>
 
-    .rita-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      object-position: top;
-      border: 3px solid var(--accent);
-      margin-bottom: 10px;
-    }
+    <div class="rita-header">
+      <img src="/assets/Brunette_Rita_Cropped.png" alt="RITA" class="rita-avatar" />
+      <p class="rita-name">RITA</p>
+      <p class="rita-tagline">Your retirement coaching companion</p>
+    </div>
 
-    .rita-name {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      margin: 0;
-    }
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="chat">Coaching</button>
+      <button class="nav-tab" data-tab="momentum">Weekly Momentum</button>
+    </div>
 
-    .rita-tagline {
-      font-size: 13px;
-      color: var(--muted);
-      margin: 2px 0 0;
-    }
+    <div class="tab-panel active" id="tab-chat">
+      <div class="notice-bar">
+        <input type="checkbox" id="consent" />
+        <span>I understand RITA provides educational guidance for the non-financial side of retirement — not financial, legal, or tax advice. <a href="/privacy.html">Privacy</a> | <a href="/terms.html">Terms</a></span>
+      </div>
+      <div class="chat" id="chat"></div>
+      <div class="status-bar" id="status"></div>
+      <div class="input-dock">
+        <textarea id="msg" rows="2" placeholder="Type your message…"></textarea>
+        <button class="send-btn" id="send" disabled>
+          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <div style="margin-top:12px;text-align:right;">
+        <button class="btn secondary" id="reset" type="button" style="font-size:13px;padding:7px 14px;">Reset session</button>
+      </div>
+    </div>
 
-    .nav-tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 0;
-      background: #fff;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
+    <div class="tab-panel" id="tab-momentum">
+      <div id="commitmentsList"></div>
+      <div class="checkin-area">
+        <button class="btn" id="checkin" type="button">Run Weekly Check-In</button>
+        <button class="btn secondary" id="newWeek" type="button">Keep or Reset Commitments</button>
+      </div>
+    </div>
 
-    .nav-tab {
-      flex: 1;
-      padding: 14px 10px;
-      text-align: center;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all .15s ease;
-      background: none;
-      border-top: none;
-      border-left: none;
-      border-right: none;
-    }
+  </div>
 
-    .nav-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .tab-panel {
-      display: none;
-      padding: 20px 0;
-    }
-
-    .tab-panel.active {
-      display: block;
-    }
-
-    /* Chat */
-    .chat {
-      min-height: 340px;
-      max-height: 440px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 4px 0 16px;
-    }
-
-    .bubble {
-      max-width: 80%;
-      padding: 12px 16px;
-      border-radius: 20px;
-      line-height: 1.5;
-      font-size: 15px;
-      white-space: pre-wrap;
-    }
-
-    .bubble.rita {
-      background: #fdf1f3;
-      border-bottom-left-radius: 4px;
-      align-self: flex-start;
-    }
-
-    .bubble.you {
-      background: var(--accent);
-      color: #fff;
-      border-bottom-right-radius: 4px;
-      align-self: flex-end;
-    }
-
-    .input-dock {
-      display: flex;
-      gap: 10px;
-      align-items: flex-end;
-      margin-top: 12px;
-    }
-
-    .input-dock textarea {
-      flex: 1;
-      border-radius: 20px;
-      padding: 12px 16px;
-      border: 1px solid var(--border);
-      background: var(--panel-soft);
-      font-size: 15px;
-      resize: none;
-      outline: none;
-      font-family: inherit;
-    }
-
-    .input-dock textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(213,64,80,.15);
-    }
-
-    .send-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--accent);
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: opacity .15s;
-    }
-
-    .send-btn:disabled {
-      opacity: .4;
-      cursor: not-allowed;
-    }
-
-    .send-btn svg {
-      width: 20px;
-      height: 20px;
-      fill: #fff;
-    }
-
-    /* Commitments */
-    .commitment-card {
-      background: var(--panel-soft);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 14px
+  <script src="/assets/supabase.min.js"></script>
+  <script src="/assets/coach.js"></script>
+</body>
+</html>

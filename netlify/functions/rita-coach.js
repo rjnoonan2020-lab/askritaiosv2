@@ -18,7 +18,7 @@ exports.handler = async (event) => {
 
   const mode = (payload.mode || "coach").trim();
   const userText = (payload.userText || "").trim();
-  const profile = payload.profile || {};
+  const profile = payload.profile || {};const focusArea = payload.focusArea || "General";
   const commitments = Array.isArray(payload.commitments) ? payload.commitments : [];
   const history = Array.isArray(payload.history) ? payload.history : [];
 

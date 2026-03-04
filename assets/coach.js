@@ -99,15 +99,13 @@ async function startFocusArea(area) {
   focusPicker.style.display = "none";
   coachUI.style.display = "block";
 
-  // Check for prior history in this area
   var priorHistory = await loadAreaHistory(area);
 
   if (priorHistory && priorHistory.length >= 2) {
-    // Returning user — ask RITA to generate a fresh contextual opener
     setBusy(true);
     setStatus("RITA is preparing\u2026");
     try {
-      var data = await fetch("/.netlify/functions/rita-coach", {
+      var resp = await fetch("/.netlify/functions/rita-coach", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -118,7 +116,8 @@ async function startFocusArea(area) {
           commitments: state.weekly_momentum.commitments,
           history: priorHistory.slice(-8)
         })
-      }).then(function(r) { return r.json(); });
+      });
+      var data = await resp.json();
       var opener = data.coach_message || FOCUS_OPENERS[area];
       addBubble(opener, "rita");
       state.history.push({ role: "assistant", text: opener });
@@ -133,7 +132,6 @@ async function startFocusArea(area) {
       setStatus("");
     }
   } else {
-    // First visit — use standard opener
     var intro = FOCUS_OPENERS[area] || "What would you like to explore today?";
     addBubble(intro, "rita");
     state.history.push({ role: "assistant", text: intro });
@@ -143,15 +141,13 @@ async function startFocusArea(area) {
 
 async function loadAreaHistory(area) {
   try {
-    // Get last 20 conversation entries and filter by area commitments context
-    // We use a simple heuristic: load recent history and pass to backend
     var r = await sb.from("conversation_history")
-      .select("role, content, created_at")
+      .select("role, content")
       .eq("user_id", currentUser.id)
+      .eq("focus_area", area)
       .order("created_at", { ascending: false })
-      .limit(30);
+      .limit(20);
     if (!r.data || !r.data.length) return [];
-    // Return in chronological order
     return r.data.reverse().map(function(row) { return { role: row.role, text: row.content }; });
   } catch(e) {
     return [];
@@ -178,7 +174,12 @@ async function loadState() {
 
 async function saveHistory(role, content) {
   if (!currentUser) return;
-  await sb.from("conversation_history").insert({ user_id: currentUser.id, role: role, content: content });
+  await sb.from("conversation_history").insert({
+    user_id: currentUser.id,
+    role: role,
+    content: content,
+    focus_area: state.focusArea
+  });
 }
 
 async function saveCommitments(commitments) {
@@ -286,12 +287,14 @@ sendBtn.addEventListener("click", async function() {
     var data = await callCoach(text, "coach");
     if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
-      await saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) {
+      var existing = state.weekly_momentum.commitments.slice();
+      var newCommits = data.commitment_suggestions.slice(0, 3).map(function(t) {
         return { text: t, status: "not_started", area: state.focusArea };
-      }));
+      });
+      await saveCommitments(existing.concat(newCommits));
       var notify = document.createElement("div");
       notify.className = "commit-notify";
-      notify.textContent = "\u2713 " + data.commitment_suggestions.length + " commitment" + (data.commitment_suggestions.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
+      notify.textContent = "\u2713 " + newCommits.length + " commitment" + (newCommits.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
       chatEl.appendChild(notify);
       chatEl.scrollTop = chatEl.scrollHeight;
     }

@@ -82,64 +82,37 @@ function renderFocusSwitch(currentArea) {
     btn.innerHTML = f.emoji + " " + f.area;
     btn.addEventListener("click", function() {
       if (f.area === state.focusArea) return;
-      state.focusArea = f.area;
-      focusBadge.textContent = f.area;
-      renderFocusSwitch(f.area);
-      var switcher = "I'd like to switch our focus to " + f.area + ".";
-      addBubble(switcher, "you");
-      state.history.push({ role: "user", text: switcher });
-      saveHistory("user", switcher);
-      setBusy(true);
-      setStatus("RITA is thinking\u2026");
-      callCoach(switcher, "coach").then(function(data) {
-        if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
-        if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
-          saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) {
-            return { text: t, status: "not_started", area: f.area };
-          })).then(function() {
-            var notify = document.createElement("div");
-            notify.className = "commit-notify";
-            notify.textContent = "\u2713 " + data.commitment_suggestions.length + " commitment" + (data.commitment_suggestions.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
-            chatEl.appendChild(notify);
-            chatEl.scrollTop = chatEl.scrollHeight;
-            renderCommitments();
-          });
-        }
-        var reply = data.coach_message || "Of course! Let's explore that.";
-        addBubble(reply, "rita");
-        state.history.push({ role: "assistant", text: reply });
-        saveHistory("assistant", reply);
-        setStatus("");
-      }).catch(function() {
-        setStatus("Error");
-      }).finally(function() {
-        setBusy(false);
-      });
+      startFocusArea(f.area);
     });
     strip.appendChild(btn);
   });
 }
 
-function showCoachUI(area, isSwitch) {
+function startFocusArea(area) {
   state.focusArea = area;
-  focusPicker.style.display = "none";
-  coachUI.style.display = "block";
+  state.history = [];
   focusBadge.textContent = area;
   focusBadge.style.display = "inline-block";
   renderFocusSwitch(area);
-  renderChat();
+  chatEl.innerHTML = "";
   sendBtn.disabled = false;
-  if (!isSwitch && !state.history.length) {
-    var intro = FOCUS_OPENERS[area] || "What would you like to explore today?";
-    addBubble(intro, "rita");
-    state.history.push({ role: "assistant", text: intro });
-    saveHistory("assistant", intro);
-  }
+  var intro = FOCUS_OPENERS[area] || "What would you like to explore today?";
+  addBubble(intro, "rita");
+  state.history.push({ role: "assistant", text: intro });
+  saveHistory("assistant", intro);
+}
+
+function showCoachUI(area) {
+  focusPicker.style.display = "none";
+  coachUI.style.display = "block";
+  startFocusArea(area);
 }
 
 document.querySelectorAll(".focus-card").forEach(function(card) {
   card.addEventListener("click", function() {
-    showCoachUI(card.dataset.area, false);
+    focusPicker.style.display = "none";
+    coachUI.style.display = "block";
+    startFocusArea(card.dataset.area);
   });
 });
 
@@ -150,8 +123,6 @@ signOutBtn.addEventListener("click", async function() {
 
 async function loadState() {
   try {
-    var r1 = await sb.from("conversation_history").select("role, content").eq("user_id", currentUser.id).order("created_at", { ascending: true });
-    if (r1.data && r1.data.length) state.history = r1.data.map(function(r) { return { role: r.role, text: r.content }; });
     var r2 = await sb.from("commitments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: true });
     if (r2.data && r2.data.length) state.weekly_momentum.commitments = r2.data.map(function(c) { return { id: c.id, text: c.text, status: c.status, area: c.area }; });
   } catch(e) { console.error("Load error", e); }
@@ -347,7 +318,7 @@ resetBtn.addEventListener("click", async function() {
   state.history = [];
   state.focusArea = null;
   state.memory = { timeline_note: "", themes: [], interests: [], constraints: [], people: [] };
-  renderChat();
+  chatEl.innerHTML = "";
   renderCommitments();
   showFocusPicker();
 });

@@ -88,7 +88,7 @@ function renderFocusSwitch(currentArea) {
   });
 }
 
-function startFocusArea(area) {
+async function startFocusArea(area) {
   state.focusArea = area;
   state.history = [];
   focusBadge.textContent = area;
@@ -96,22 +96,70 @@ function startFocusArea(area) {
   renderFocusSwitch(area);
   chatEl.innerHTML = "";
   sendBtn.disabled = false;
-  var intro = FOCUS_OPENERS[area] || "What would you like to explore today?";
-  addBubble(intro, "rita");
-  state.history.push({ role: "assistant", text: intro });
-  saveHistory("assistant", intro);
-}
-
-function showCoachUI(area) {
   focusPicker.style.display = "none";
   coachUI.style.display = "block";
-  startFocusArea(area);
+
+  // Check for prior history in this area
+  var priorHistory = await loadAreaHistory(area);
+
+  if (priorHistory && priorHistory.length >= 2) {
+    // Returning user — ask RITA to generate a fresh contextual opener
+    setBusy(true);
+    setStatus("RITA is preparing\u2026");
+    try {
+      var data = await fetch("/.netlify/functions/rita-coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "returning",
+          userText: "",
+          focusArea: area,
+          memory: state.memory,
+          commitments: state.weekly_momentum.commitments,
+          history: priorHistory.slice(-8)
+        })
+      }).then(function(r) { return r.json(); });
+      var opener = data.coach_message || FOCUS_OPENERS[area];
+      addBubble(opener, "rita");
+      state.history.push({ role: "assistant", text: opener });
+      await saveHistory("assistant", opener);
+    } catch(e) {
+      var fallback = FOCUS_OPENERS[area] || "Welcome back! What would you like to explore today?";
+      addBubble(fallback, "rita");
+      state.history.push({ role: "assistant", text: fallback });
+      await saveHistory("assistant", fallback);
+    } finally {
+      setBusy(false);
+      setStatus("");
+    }
+  } else {
+    // First visit — use standard opener
+    var intro = FOCUS_OPENERS[area] || "What would you like to explore today?";
+    addBubble(intro, "rita");
+    state.history.push({ role: "assistant", text: intro });
+    await saveHistory("assistant", intro);
+  }
+}
+
+async function loadAreaHistory(area) {
+  try {
+    // Get last 20 conversation entries and filter by area commitments context
+    // We use a simple heuristic: load recent history and pass to backend
+    var r = await sb.from("conversation_history")
+      .select("role, content, created_at")
+      .eq("user_id", currentUser.id)
+      .order("created_at", { ascending: false })
+      .limit(30);
+    if (!r.data || !r.data.length) return [];
+    // Return in chronological order
+    return r.data.reverse().map(function(row) { return { role: row.role, text: row.content }; });
+  } catch(e) {
+    return [];
+  }
 }
 
 document.querySelectorAll(".focus-card").forEach(function(card) {
   card.addEventListener("click", function() {
-    focusPicker.style.display = "none";
-    coachUI.style.display = "block";
     startFocusArea(card.dataset.area);
   });
 });

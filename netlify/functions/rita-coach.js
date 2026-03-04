@@ -29,7 +29,15 @@ exports.handler = async (event) => {
   const userMessageCount = history.filter(function(m) { return m.role === "user" || m.role === "you"; }).length;
   const commitThreshold = isActionArea ? 3 : 4;
   const areaCommitments = commitments.filter(function(c) { return c.area === focusArea; });
-  const mustCommitFinal = userMessageCount >= commitThreshold && areaCommitments.length === 0;
+  
+  // First commit trigger — no commits yet for this area
+  const mustCommitFirst = userMessageCount >= commitThreshold && areaCommitments.length === 0;
+  
+  // Additional commit trigger — has commits but conversation has moved to a new topic
+  // Fire every 3 user messages after the first commit
+  const mustCommitAdditional = areaCommitments.length > 0 && userMessageCount > 0 && userMessageCount % 3 === 0;
+  
+  const mustCommitFinal = mustCommitFirst || mustCommitAdditional;
   const commitCount = isActionArea ? "2 or 3" : "1 or 2";
 
   const system = [
@@ -45,19 +53,21 @@ exports.handler = async (event) => {
   const modeInstructions = {
     returning: [
       "The user is returning to the focus area: " + focusArea + ".",
-      "You have access to their recent conversation history in this area.",
-      "Generate a warm, personalized welcome back message that references something specific from their previous conversation.",
+      "You have access to their recent conversation history.",
+      "Generate a warm, personalized welcome back message that references something specific they mentioned before.",
       "Ask a fresh follow-up question that moves the conversation forward from where they left off.",
-      "Do NOT repeat the standard opener question. Make it feel like picking up a conversation with a trusted coach.",
+      "Do NOT use the standard opener question. Make it feel like picking up with a trusted coach.",
       "Keep it to 2-3 sentences maximum."
     ].join(" "),
     coach: mustCommitFinal
       ? [
-          "You have enough information to suggest commitments NOW.",
+          "Based on the conversation so far, it is time to suggest new commitments.",
           "The user is focused on: " + focusArea + ".",
-          isActionArea
-            ? "This is an action-oriented topic. Suggest " + commitCount + " specific, concrete commitments completable within 7 days."
-            : "This is a reflection-oriented topic. Suggest " + commitCount + " gentle, meaningful commitments — these may include journaling, a single conversation, or one small exploratory action.",
+          areaCommitments.length > 0
+            ? "The user already has some commitments. Suggest 1 or 2 NEW commitments based on the most recent topic in the conversation — do not repeat existing ones."
+            : isActionArea
+              ? "This is an action-oriented topic. Suggest " + commitCount + " specific, concrete commitments completable within 7 days."
+              : "This is a reflection-oriented topic. Suggest " + commitCount + " gentle, meaningful commitments — these may include journaling, a single conversation, or one small exploratory action.",
           "Keep your coach_message to one warm sentence of encouragement.",
           "You MUST include commitment_suggestions in your JSON. This is not optional.",
           "Do NOT ask another question. It is time to act."
@@ -94,7 +104,7 @@ exports.handler = async (event) => {
   const jsonSchemaHint = {
     coach_message: "string — your coaching response",
     memory_update: { "optional_profile_fields": "values to remember about this user" },
-    commitment_suggestions: ["array of " + commitCount + " specific action strings — REQUIRED when mustCommit is true"],
+    commitment_suggestions: ["array of specific action strings — REQUIRED when mustCommit is true"],
     action: "optional string: reset_commitments | keep_commitments"
   };
 
@@ -117,7 +127,8 @@ exports.handler = async (event) => {
               `INSTRUCTIONS: ${instruction}\n\n` +
               `USER_MESSAGE_COUNT: ${userMessageCount}\n` +
               `MUST_SUGGEST_COMMITMENTS: ${mustCommitFinal ? "YES — commitment_suggestions is REQUIRED" : "not yet"}\n` +
-              `COMMIT_COUNT_IF_SUGGESTING: ${commitCount}\n\n` +
+              `EXISTING_AREA_COMMITMENTS: ${areaCommitments.length} (do not repeat these)\n` +
+              `COMMIT_COUNT_IF_SUGGESTING: ${areaCommitments.length > 0 ? "1 or 2 new ones only" : commitCount}\n\n` +
               `CURRENT_PROFILE: ${JSON.stringify(profile)}\n\n` +
               `CURRENT_COMMITMENTS: ${JSON.stringify(commitments)}\n\n` +
               `CONVERSATION_HISTORY: ${JSON.stringify(history)}\n\n` +

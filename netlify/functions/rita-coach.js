@@ -23,20 +23,15 @@ exports.handler = async (event) => {
   const history = Array.isArray(payload.history) ? payload.history : [];
   const focusArea = payload.focusArea || "General";
 
+  const allAreas = ["Activity", "Emotions", "Connections", "Meaning", "Leisure", "Learning", "Contribution", "Time", "Finance & Home"];
   const actionAreas = ["Activity", "Time", "Connections", "Finance & Home"];
   const isActionArea = actionAreas.includes(focusArea);
 
   const userMessageCount = history.filter(function(m) { return m.role === "user" || m.role === "you"; }).length;
   const commitThreshold = isActionArea ? 3 : 4;
   const areaCommitments = commitments.filter(function(c) { return c.area === focusArea; });
-  
-  // First commit trigger — no commits yet for this area
   const mustCommitFirst = userMessageCount >= commitThreshold && areaCommitments.length === 0;
-  
-  // Additional commit trigger — has commits but conversation has moved to a new topic
-  // Fire every 3 user messages after the first commit
   const mustCommitAdditional = areaCommitments.length > 0 && userMessageCount > 0 && userMessageCount % 3 === 0;
-  
   const mustCommitFinal = mustCommitFirst || mustCommitAdditional;
   const commitCount = isActionArea ? "2 or 3" : "1 or 2";
 
@@ -62,12 +57,15 @@ exports.handler = async (event) => {
     coach: mustCommitFinal
       ? [
           "Based on the conversation so far, it is time to suggest new commitments.",
-          "The user is focused on: " + focusArea + ".",
+          "The user is focused on: " + focusArea + " but the conversation may have touched on other life areas.",
           areaCommitments.length > 0
-            ? "The user already has some commitments. Suggest 1 or 2 NEW commitments based on the most recent topic in the conversation — do not repeat existing ones."
+            ? "The user already has some commitments. Suggest 1 or 2 NEW commitments based on the most recent topic — do not repeat existing ones."
             : isActionArea
               ? "This is an action-oriented topic. Suggest " + commitCount + " specific, concrete commitments completable within 7 days."
-              : "This is a reflection-oriented topic. Suggest " + commitCount + " gentle, meaningful commitments — these may include journaling, a single conversation, or one small exploratory action.",
+              : "This is a reflection-oriented topic. Suggest " + commitCount + " gentle, meaningful commitments.",
+          "IMPORTANT: For each commitment, detect which life area it truly belongs to from this list: " + allAreas.join(", ") + ".",
+          "Return commitment_suggestions as an array of objects with 'text' and 'area' fields.",
+          "Example: [{\"text\": \"Call a friend this week\", \"area\": \"Connections\"}, {\"text\": \"Take a 20 minute walk\", \"area\": \"Activity\"}]",
           "Keep your coach_message to one warm sentence of encouragement.",
           "You MUST include commitment_suggestions in your JSON. This is not optional.",
           "Do NOT ask another question. It is time to act."
@@ -75,8 +73,8 @@ exports.handler = async (event) => {
       : [
           "You are coaching a retiree focused on: " + focusArea + ".",
           isActionArea
-            ? "This is an action-oriented topic. Ask one focused practical question to understand what specific steps or barriers the user is facing."
-            : "This is a reflection-oriented topic. Ask one warm, open question that helps the user go deeper into what they're feeling or discovering.",
+            ? "Ask one focused practical question to understand what specific steps or barriers the user is facing."
+            : "Ask one warm, open question that helps the user go deeper into what they're feeling or discovering.",
           "Keep your response concise and warm. One question only."
         ].join(" "),
     checkin: [
@@ -95,6 +93,7 @@ exports.handler = async (event) => {
       isActionArea
         ? "New commitments should be concrete, specific actions."
         : "New commitments can include reflection, journaling, or one small exploratory step.",
+      "Return commitment_suggestions as an array of objects with 'text' and 'area' fields.",
       "Always include commitment_suggestions in your response."
     ].join(" "),
   };
@@ -104,7 +103,7 @@ exports.handler = async (event) => {
   const jsonSchemaHint = {
     coach_message: "string — your coaching response",
     memory_update: { "optional_profile_fields": "values to remember about this user" },
-    commitment_suggestions: ["array of specific action strings — REQUIRED when mustCommit is true"],
+    commitment_suggestions: [{ text: "specific action string", area: "one of: " + allAreas.join(", ") }],
     action: "optional string: reset_commitments | keep_commitments"
   };
 

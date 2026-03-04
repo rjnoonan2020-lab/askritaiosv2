@@ -85,6 +85,7 @@ function renderFocusSwitch(currentArea) {
       state.focusArea = f.area;
       focusBadge.textContent = f.area;
       renderFocusSwitch(f.area);
+      renderChat();
       var switcher = "I'd like to switch our focus to " + f.area + ".";
       addBubble(switcher, "you");
       state.history.push({ role: "user", text: switcher });
@@ -93,11 +94,20 @@ function renderFocusSwitch(currentArea) {
       setStatus("RITA is thinking\u2026");
       callCoach(switcher, "coach").then(function(data) {
         if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
+        if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
+          saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) { return { text: t, status: "not_started", area: f.area }; })).then(function() {
+            var notify = document.createElement("div");
+            notify.className = "commit-notify";
+            notify.textContent = "\u2713 " + data.commitment_suggestions.length + " commitment" + (data.commitment_suggestions.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
+            chatEl.appendChild(notify);
+            chatEl.scrollTop = chatEl.scrollHeight;
+            renderCommitments();
+          });
+        }
         var reply = data.coach_message || "Of course! Let's explore that.";
         addBubble(reply, "rita");
         state.history.push({ role: "assistant", text: reply });
         saveHistory("assistant", reply);
-        renderCommitments();
         setStatus("");
       }).catch(function() {
         setStatus("Error");
@@ -109,7 +119,7 @@ function renderFocusSwitch(currentArea) {
   });
 }
 
-function showCoachUI(area) {
+function showCoachUI(area, isSwitch) {
   state.focusArea = area;
   focusPicker.style.display = "none";
   coachUI.style.display = "block";
@@ -118,7 +128,7 @@ function showCoachUI(area) {
   renderFocusSwitch(area);
   renderChat();
   sendBtn.disabled = false;
-  if (!state.history.length) {
+  if (!isSwitch && !state.history.length) {
     var intro = FOCUS_OPENERS[area] || "What would you like to explore today?";
     addBubble(intro, "rita");
     state.history.push({ role: "assistant", text: intro });
@@ -128,7 +138,7 @@ function showCoachUI(area) {
 
 document.querySelectorAll(".focus-card").forEach(function(card) {
   card.addEventListener("click", function() {
-    showCoachUI(card.dataset.area);
+    showCoachUI(card.dataset.area, false);
   });
 });
 
@@ -321,6 +331,7 @@ resetBtn.addEventListener("click", async function() {
   await sb.from("conversation_history").delete().eq("user_id", currentUser.id);
   await saveCommitments([]);
   state.history = [];
+  state.focusArea = null;
   state.memory = { timeline_note: "", themes: [], interests: [], constraints: [], people: [] };
   renderChat();
   renderCommitments();

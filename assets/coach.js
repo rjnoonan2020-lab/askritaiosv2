@@ -62,12 +62,61 @@ function showFocusPicker() {
   coachUI.style.display = "none";
 }
 
+var FOCUS_AREAS = [
+  { area: "Activity", emoji: "🏃" },
+  { area: "Emotions", emoji: "💛" },
+  { area: "Connections", emoji: "👥" },
+  { area: "Meaning", emoji: "🎯" },
+  { area: "Leisure", emoji: "🎨" },
+  { area: "Learning", emoji: "📚" },
+  { area: "Contribution", emoji: "🤝" },
+  { area: "Time", emoji: "⏰" },
+  { area: "Finance & Home", emoji: "🏠" }
+];
+
+function renderFocusSwitch(currentArea) {
+  var strip = document.getElementById("focusSwitch");
+  if (!strip) return;
+  strip.innerHTML = "";
+  FOCUS_AREAS.forEach(function(f) {
+    var btn = document.createElement("button");
+    btn.className = "focus-switch-btn" + (f.area === currentArea ? " current" : "");
+    btn.innerHTML = f.emoji + " " + f.area;
+    btn.addEventListener("click", function() {
+      if (f.area === state.focusArea) return;
+      state.focusArea = f.area;
+      focusBadge.textContent = f.area;
+      renderFocusSwitch(f.area);
+      var switcher = "I'd like to switch our focus to " + f.area + ".";
+      addBubble(switcher, "you");
+      state.history.push({ role: "user", text: switcher });
+      saveHistory("user", switcher);
+      setBusy(true);
+      setStatus("RITA is thinking\u2026");
+      callCoach(switcher, "coach").then(function(data) {
+        if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
+        var reply = data.coach_message || "Of course! Let's explore that.";
+        addBubble(reply, "rita");
+        state.history.push({ role: "assistant", text: reply });
+        saveHistory("assistant", reply);
+        setStatus("");
+      }).catch(function() {
+        setStatus("Error");
+      }).finally(function() {
+        setBusy(false);
+      });
+    });
+    strip.appendChild(btn);
+  });
+}
+
 function showCoachUI(area) {
   state.focusArea = area;
   focusPicker.style.display = "none";
   coachUI.style.display = "block";
   focusBadge.textContent = area;
   focusBadge.style.display = "inline-block";
+  renderFocusSwitch(area);
   renderChat();
   sendBtn.disabled = false;
   if (!state.history.length) {

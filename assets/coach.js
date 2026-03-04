@@ -1,23 +1,21 @@
 const SUPABASE_URL = "https://wjubibjkasoattmbqurf.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdWJpYmprYXNvYXR0bWJxdXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0ODAyMDEsImV4cCI6MjA4ODA1NjIwMX0.djzKshGnvgxqmD6PiKP5tnW0gjgKdqHyQcA_MHTCqqs";
+const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const chatEl       = document.getElementById("chat");
-const msgEl        = document.getElementById("msg");
-const sendBtn      = document.getElementById("send");
-const resetBtn     = document.getElementById("reset");
-const statusEl     = document.getElementById("status");
-const commitsEl    = document.getElementById("commitmentsList");
-const checkinBtn   = document.getElementById("checkin");
-const newWeekBtn   = document.getElementById("newWeek");
-const signOutBtn   = document.getElementById("signOutBtn");
-const focusPicker  = document.getElementById("focusPicker");
-const coachUI      = document.getElementById("coachInterface");
-const focusBadge   = document.getElementById("focusBadge");
-const changeFocus  = document.getElementById("changeFocus");
+const chatEl      = document.getElementById("chat");
+const msgEl       = document.getElementById("msg");
+const sendBtn     = document.getElementById("send");
+const resetBtn    = document.getElementById("reset");
+const statusEl    = document.getElementById("status");
+const commitsEl   = document.getElementById("commitmentsList");
+const checkinBtn  = document.getElementById("checkin");
+const newWeekBtn  = document.getElementById("newWeek");
+const signOutBtn  = document.getElementById("signOutBtn");
+const focusPicker = document.getElementById("focusPicker");
+const coachUI     = document.getElementById("coachInterface");
+const focusBadge  = document.getElementById("focusBadge");
 
 const FOCUS_OPENERS = {
-  
   "Activity":       "Let's talk about staying active. How would you describe your current level of physical activity, and how does it make you feel?",
   "Emotions":       "It takes courage to check in with how you're really feeling. What emotions have been most present for you lately in retirement?",
   "Connections":    "Relationships are so important in retirement. How connected do you feel to the people who matter most to you right now?",
@@ -28,39 +26,6 @@ const FOCUS_OPENERS = {
   "Time":           "Time is your most valuable asset in retirement. How are you feeling about the way you're spending your days — is it intentional, or does it feel unstructured?",
   "Finance & Home": "Your relationship with money and your living situation shapes so much of retirement. What feels settled, and what feels uncertain in this area?"
 };
-
-document.querySelectorAll(".nav-tab").forEach(function(tab) {
-  tab.addEventListener("click", function() {
-    document.querySelectorAll(".nav-tab").forEach(function(t) { t.classList.remove("active"); });
-    document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
-    tab.classList.add("active");
-    document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
-  });
-});
-
-let state = {
-  memory: { timeline_note: "", themes: [], interests: [], constraints: [], people: [] },
-  history: [],
-  weekly_momentum: { commitments: [], last_checkin: null },
-  focusArea: null
-};
-
-let currentUser = null;
-let busy = false;
-
-async function initAuth() {
-  const { data } = await sb.auth.getSession();
-  if (!data.session) { window.location.href = "/login.html"; return; }
-  currentUser = data.session.user;
-  await loadState();
-  renderCommitments();
-  showFocusPicker();
-}
-
-function showFocusPicker() {
-  focusPicker.style.display = "block";
-  coachUI.style.display = "none";
-}
 
 var FOCUS_AREAS = [
   { area: "Activity", emoji: "🏃" },
@@ -73,6 +38,39 @@ var FOCUS_AREAS = [
   { area: "Time", emoji: "⏰" },
   { area: "Finance & Home", emoji: "🏠" }
 ];
+
+document.querySelectorAll(".nav-tab").forEach(function(tab) {
+  tab.addEventListener("click", function() {
+    document.querySelectorAll(".nav-tab").forEach(function(t) { t.classList.remove("active"); });
+    document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
+    tab.classList.add("active");
+    document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+  });
+});
+
+var state = {
+  memory: { timeline_note: "", themes: [], interests: [], constraints: [], people: [] },
+  history: [],
+  weekly_momentum: { commitments: [], last_checkin: null },
+  focusArea: null
+};
+
+var currentUser = null;
+var busy = false;
+
+async function initAuth() {
+  var result = await sb.auth.getSession();
+  if (!result.data.session) { window.location.href = "/login.html"; return; }
+  currentUser = result.data.session.user;
+  await loadState();
+  renderCommitments();
+  showFocusPicker();
+}
+
+function showFocusPicker() {
+  focusPicker.style.display = "block";
+  coachUI.style.display = "none";
+}
 
 function renderFocusSwitch(currentArea) {
   var strip = document.getElementById("focusSwitch");
@@ -99,6 +97,7 @@ function renderFocusSwitch(currentArea) {
         addBubble(reply, "rita");
         state.history.push({ role: "assistant", text: reply });
         saveHistory("assistant", reply);
+        renderCommitments();
         setStatus("");
       }).catch(function() {
         setStatus("Error");
@@ -120,7 +119,7 @@ function showCoachUI(area) {
   renderChat();
   sendBtn.disabled = false;
   if (!state.history.length) {
-    var intro = FOCUS_OPENERS[area] || "What feels most uncertain or exciting about this next chapter for you?";
+    var intro = FOCUS_OPENERS[area] || "What would you like to explore today?";
     addBubble(intro, "rita");
     state.history.push({ role: "assistant", text: intro });
     saveHistory("assistant", intro);
@@ -129,13 +128,8 @@ function showCoachUI(area) {
 
 document.querySelectorAll(".focus-card").forEach(function(card) {
   card.addEventListener("click", function() {
-    var area = card.dataset.area;
-    showCoachUI(area);
+    showCoachUI(card.dataset.area);
   });
-});
-
-changeFocus.addEventListener("click", function() {
-  showFocusPicker();
 });
 
 signOutBtn.addEventListener("click", async function() {
@@ -145,10 +139,10 @@ signOutBtn.addEventListener("click", async function() {
 
 async function loadState() {
   try {
-    const { data } = await sb.from("conversation_history").select("role, content").eq("user_id", currentUser.id).order("created_at", { ascending: true });
-    if (data && data.length) state.history = data.map(function(r) { return { role: r.role, text: r.content }; });
-    const { data: commits } = await sb.from("commitments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: true });
-    if (commits && commits.length) state.weekly_momentum.commitments = commits.map(function(c) { return { id: c.id, text: c.text, status: c.status }; });
+    var r1 = await sb.from("conversation_history").select("role, content").eq("user_id", currentUser.id).order("created_at", { ascending: true });
+    if (r1.data && r1.data.length) state.history = r1.data.map(function(r) { return { role: r.role, text: r.content }; });
+    var r2 = await sb.from("commitments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: true });
+    if (r2.data && r2.data.length) state.weekly_momentum.commitments = r2.data.map(function(c) { return { id: c.id, text: c.text, status: c.status, area: c.area }; });
   } catch(e) { console.error("Load error", e); }
 }
 
@@ -161,9 +155,9 @@ async function saveCommitments(commitments) {
   if (!currentUser) return;
   await sb.from("commitments").delete().eq("user_id", currentUser.id);
   if (commitments.length) {
-    await sb.from("commitments").insert(commitments.map(function(c) { return { user_id: currentUser.id, text: c.text, status: c.status || "not_started" }; }));
-    const { data } = await sb.from("commitments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: true });
-    if (data) state.weekly_momentum.commitments = data.map(function(c) { return { id: c.id, text: c.text, status: c.status }; });
+    await sb.from("commitments").insert(commitments.map(function(c) { return { user_id: currentUser.id, text: c.text, status: c.status || "not_started", area: c.area || state.focusArea }; }));
+    var r = await sb.from("commitments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: true });
+    if (r.data) state.weekly_momentum.commitments = r.data.map(function(c) { return { id: c.id, text: c.text, status: c.status, area: c.area }; });
   } else {
     state.weekly_momentum.commitments = [];
   }
@@ -171,8 +165,8 @@ async function saveCommitments(commitments) {
 
 async function updateCommitmentStatus(id, status) {
   if (!currentUser) return;
-  const { error } = await sb.from("commitments").update({ status: status }).eq("id", id).eq("user_id", currentUser.id);
-  if (error) console.error("Status update error", error);
+  var result = await sb.from("commitments").update({ status: status }).eq("id", id).eq("user_id", currentUser.id);
+  if (result.error) console.error("Status update error", result.error);
 }
 
 function setStatus(msg) { statusEl.textContent = msg || ""; }
@@ -254,6 +248,11 @@ sendBtn.addEventListener("click", async function() {
     if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       await saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) { return { text: t, status: "not_started", area: state.focusArea }; }));
+      var notify = document.createElement("div");
+      notify.className = "commit-notify";
+      notify.textContent = "\u2713 " + data.commitment_suggestions.length + " commitment" + (data.commitment_suggestions.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
+      chatEl.appendChild(notify);
+      chatEl.scrollTop = chatEl.scrollHeight;
     }
     var reply = data.coach_message || "Tell me more.";
     addBubble(reply, "rita");
@@ -286,8 +285,11 @@ checkinBtn.addEventListener("click", async function() {
     await saveHistory("assistant", reply);
     document.querySelector("[data-tab='chat']").click();
     setStatus("");
-  } catch(e) { setStatus("Error"); }
-  finally { setBusy(false); }
+  } catch(e) {
+    setStatus("Error");
+  } finally {
+    setBusy(false);
+  }
 });
 
 newWeekBtn.addEventListener("click", async function() {
@@ -303,18 +305,15 @@ newWeekBtn.addEventListener("click", async function() {
     if (data.action === "reset_commitments") await saveCommitments([]);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       await saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) { return { text: t, status: "not_started", area: state.focusArea }; }));
-      var notify = document.createElement("div");
-      notify.className = "commit-notify";
-      notify.textContent = "✓ " + data.commitment_suggestions.length + " commitment" + (data.commitment_suggestions.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
-      chatEl.appendChild(notify);
-      chatEl.scrollTop = chatEl.scrollHeight;
-    }
     }
     renderCommitments();
     document.querySelector("[data-tab='chat']").click();
     setStatus("");
-  } catch(e) { setStatus("Error"); }
-  finally { setBusy(false); }
+  } catch(e) {
+    setStatus("Error");
+  } finally {
+    setBusy(false);
+  }
 });
 
 resetBtn.addEventListener("click", async function() {

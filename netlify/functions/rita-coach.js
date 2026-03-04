@@ -23,42 +23,49 @@ exports.handler = async (event) => {
   const history = Array.isArray(payload.history) ? payload.history : [];
 
   const system = [
-    "You are RITA, the coaching companion for Third Act Advisors.",
+    "You are RITA, a warm and practical retirement transition coach for Third Act Advisors.",
     "Your job is to help retirees move forward with gentle encouragement and light accountability.",
-    "Focus areas: meeting new people, exploring hobbies, exploring encore work, building routine and structure, relationship continuity.",
-    "Tone: calm, warm, practical. No guilt. No tough love. No streak language.",
+    "Focus areas: identity beyond work, finding purpose and meaning, building new routines, relationships, hobbies, encore careers, volunteering, and contribution.",
+    "Tone: calm, warm, practical, encouraging. No guilt. No tough love. No streak language.",
+    "You are NOT a search engine. You are a coach. Always move the conversation toward action.",
     "Do not request sensitive personal data.",
-    "Return STRICT JSON only."
+    "Return STRICT JSON only — no markdown, no explanation outside the JSON."
   ].join(" ");
 
   const modeInstructions = {
     coach: [
-      "You are in an ongoing coaching conversation.",
-      "Ask one good next question OR offer a short next-step suggestion.",
-      "If appropriate, suggest 1 to 3 weekly commitments that are small and realistic.",
-      "Commitments should be phrased as simple actions that can be done within 7 days."
+      "You are in an ongoing coaching conversation with a retiree.",
+      "Your goal is to move from reflection toward action within 3-4 exchanges.",
+      "After 2 exchanges, always suggest 1 to 3 specific weekly commitments.",
+      "Commitments must be small, concrete actions completable within 7 days.",
+      "Example commitments: 'Call the engineering department at a local college to ask about mentoring', 'Play one round of golf this week', 'Spend 30 minutes researching IEEE mentoring programs'.",
+      "Always include commitment_suggestions in your JSON response after the second exchange.",
+      "Ask one focused follow-up question AND provide the commitments — do both together.",
+      "Never just answer like a search engine. Always coach toward a next step."
     ].join(" "),
     checkin: [
       "This is a weekly check-in.",
       "You will be given commitments with statuses: not_started, in_progress, done.",
+      "Acknowledge what was completed with genuine warmth.",
+      "For anything not started or in progress, normalize it — there is no failure here.",
       "Respond with encouragement and one reflection question.",
-      "End by asking whether the user wants to keep, adjust, or reset."
+      "End by asking whether the user wants to keep, adjust, or reset their commitments."
     ].join(" "),
     keep_or_reset: [
       "User is deciding whether to keep, adjust, or reset commitments.",
-      "If most are unfinished, normalize it and offer either keeping one small commitment or resetting.",
-      "If some are done, offer keeping and refining.",
-      "If all are done, offer a slightly more ambitious set of 1 to 3 new commitments."
+      "If most are unfinished, normalize it warmly and offer either keeping one small commitment or resetting.",
+      "If some are done, celebrate and offer keeping and refining the rest.",
+      "If all are done, offer a slightly more ambitious set of 1 to 3 new commitments.",
+      "Always end with a specific suggestion for next week."
     ].join(" "),
   };
 
   const instruction = modeInstructions[mode] || modeInstructions.coach;
 
-  // Ask model to output JSON with these fields
   const jsonSchemaHint = {
-    coach_message: "string",
-    profile_update: { "optional_profile_fields": "values" },
-    commitment_suggestions: ["string up to 3"],
+    coach_message: "string — your coaching response",
+    memory_update: { "optional_profile_fields": "values to remember about this user" },
+    commitment_suggestions: ["up to 3 specific action strings"],
     action: "optional string: reset_commitments | keep_commitments"
   };
 
@@ -68,7 +75,7 @@ exports.handler = async (event) => {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
-        temperature: 0.5,
+        temperature: 0.6,
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: system },
@@ -79,9 +86,9 @@ exports.handler = async (event) => {
               `INSTRUCTIONS: ${instruction}\n\n` +
               `CURRENT_PROFILE (may be empty): ${JSON.stringify(profile)}\n\n` +
               `CURRENT_COMMITMENTS: ${JSON.stringify(commitments)}\n\n` +
-              `RECENT_HISTORY: ${JSON.stringify(history)}\n\n` +
+              `CONVERSATION_HISTORY (last 12 messages): ${JSON.stringify(history)}\n\n` +
               `USER_MESSAGE: ${userText}\n\n` +
-              `Return JSON matching this shape (keys can be omitted if not needed):\n${JSON.stringify(jsonSchemaHint)}`
+              `Return JSON matching this shape (omit keys not needed):\n${JSON.stringify(jsonSchemaHint)}`
           }
         ]
       })
@@ -92,10 +99,9 @@ exports.handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ error: data?.error?.message || "OpenAI request failed" }) };
     }
 
-    // Because we forced json_object, the content should be JSON
     const content = data?.choices?.[0]?.message?.content || "{}";
     let out = {};
-    try { out = JSON.parse(content); } catch { out = { coach_message: "I’m here with you. What feels most important right now?" }; }
+    try { out = JSON.parse(content); } catch { out = { coach_message: "I'm here with you. What feels most important right now?" }; }
 
     return { statusCode: 200, headers, body: JSON.stringify(out) };
   } catch {

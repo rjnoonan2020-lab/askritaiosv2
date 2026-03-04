@@ -671,3 +671,17 @@ body.embed .wrap{
   background: #fdf1f3;
   color: var(--accent);
 }
+.commit-section {
+  margin-bottom: 20px;
+}
+
+.commit-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}

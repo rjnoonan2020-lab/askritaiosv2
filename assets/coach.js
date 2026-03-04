@@ -31,6 +31,7 @@ let state = {
 };
 
 let currentUser = null;
+let busy = false;
 
 // ── Auth ──────────────────────────────────────────────────
 async function initAuth() {
@@ -72,7 +73,7 @@ async function loadState() {
       .from("commitments")
       .select("*")
       .eq("user_id", currentUser.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
     if (commits && commits.length) {
       state.weekly_momentum.commitments = commits.map(c => ({
         id: c.id,
@@ -109,7 +110,7 @@ async function saveCommitments(commitments) {
       .from("commitments")
       .select("*")
       .eq("user_id", currentUser.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
     if (data) {
       state.weekly_momentum.commitments = data.map(c => ({
         id: c.id, text: c.text, status: c.status
@@ -122,11 +123,23 @@ async function saveCommitments(commitments) {
 
 async function updateCommitmentStatus(id, status) {
   if (!currentUser) return;
-  await sb.from("commitments").update({ status }).eq("id", id).eq("user_id", currentUser.id);
+  const { error } = await sb
+    .from("commitments")
+    .update({ status })
+    .eq("id", id)
+    .eq("user_id", currentUser.id);
+  if (error) console.error("Status update error", error);
 }
 
 // ── UI Helpers ────────────────────────────────────────────
 function setStatus(msg) { statusEl.textContent = msg || ""; }
+
+function setBusy(val) {
+  busy = val;
+  sendBtn.disabled = val;
+  checkinBtn.disabled = val;
+  newWeekBtn.disabled = val;
+}
 
 function addBubble(text, who) {
   const div = document.createElement("div");
@@ -148,25 +161,27 @@ function renderCommitments() {
     commitsEl.innerHTML = `<div class="empty-state">No active commitments yet.<br>RITA will suggest some during your coaching conversation.</div>`;
     return;
   }
-  commits.forEach((c, idx) => {
+  commits.forEach((c) => {
     const card = document.createElement("div");
     card.className = "commitment-card";
     card.innerHTML = `
       <div class="commitment-text">${c.text}</div>
       <div class="status-pills">
-        <button class="pill ${c.status === 'not_started' ? 'active-not_started' : ''}" data-status="not_started" data-idx="${idx}">Not started</button>
-        <button class="pill ${c.status === 'in_progress' ? 'active-in_progress' : ''}" data-status="in_progress" data-idx="${idx}">In progress</button>
-        <button class="pill ${c.status === 'done' ? 'active-done' : ''}" data-status="done" data-idx="${idx}">Done</button>
+        <button class="pill ${c.status === 'not_started' ? 'active-not_started' : ''}" data-status="not_started" data-id="${c.id}">Not started</button>
+        <button class="pill ${c.status === 'in_progress' ? 'active-in_progress' : ''}" data-status="in_progress" data-id="${c.id}">In progress</button>
+        <button class="pill ${c.status === 'done' ? 'active-done' : ''}" data-status="done" data-id="${c.id}">Done</button>
       </div>`;
     commitsEl.appendChild(card);
   });
 
   commitsEl.querySelectorAll(".pill").forEach(pill => {
     pill.addEventListener("click", async () => {
-      const idx = parseInt(pill.dataset.idx);
+      const id = pill.dataset.id;
       const status = pill.dataset.status;
-      state.weekly_momentum.commitments[idx].status = status;
-      await updateCommitmentStatus(state.weekly_momentum.commitments[idx].id, status);
+      const commit = state.weekly_momentum.commitments.find(c => c.id === id);
+      if (!commit) return;
+      commit.status = status;
+      await updateCommitmentStatus(id, status);
       renderCommitments();
     });
   });
@@ -192,18 +207,19 @@ async function callCoach(userText, mode) {
 
 // ── Send Message ──────────────────────────────────────────
 sendBtn.addEventListener("click", async () => {
+  if (busy) return;
   const text = (msgEl.value || "").trim();
   if (!text) return;
   msgEl.value = "";
   addBubble(text, "you");
   state.history.push({ role: "user", text });
   await saveHistory("user", text);
-  sendBtn.disabled = true;
+  setBusy(true);
   setStatus("RITA is thinking…");
   try {
     const data = await callCoach(text, "coach");
     if (data.memory_update) state.memory = { ...state.memory, ...data.memory_update };
-    if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length && !state.weekly_momentum.commitments.length) {
+    if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       await saveCommitments(data.commitment_suggestions.slice(0, 3).map(t => ({ text: t, status: "not_started" })));
     }
     const reply = data.coach_message || "Tell me more.";
@@ -216,7 +232,7 @@ sendBtn.addEventListener("click", async () => {
     addBubble("Something went wrong. Please try again.", "rita");
     setStatus("Error");
   } finally {
-    sendBtn.disabled = false;
+    setBusy(false);
   }
 });
 
@@ -224,13 +240,15 @@ sendBtn.addEventListener("click", async () => {
 msgEl.addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    if (!sendBtn.disabled) sendBtn.click();
+    if (!busy) sendBtn.click();
   }
 });
 
 // ── Check-In ──────────────────────────────────────────────
 checkinBtn.addEventListener("click", async () => {
+  if (busy) return;
   if (!state.weekly_momentum.commitments.length) { setStatus("No commitments yet."); return; }
+  setBusy(true);
   setStatus("Running check-in…");
   try {
     const data = await callCoach("", "checkin");
@@ -241,10 +259,13 @@ checkinBtn.addEventListener("click", async () => {
     document.querySelector('[data-tab="chat"]').click();
     setStatus("");
   } catch { setStatus("Error"); }
+  finally { setBusy(false); }
 });
 
 // ── Keep / Reset ──────────────────────────────────────────
 newWeekBtn.addEventListener("click", async () => {
+  if (busy) return;
+  setBusy(true);
   setStatus("Thinking…");
   try {
     const data = await callCoach("", "keep_or_reset");
@@ -262,6 +283,7 @@ newWeekBtn.addEventListener("click", async () => {
     document.querySelector('[data-tab="chat"]').click();
     setStatus("");
   } catch { setStatus("Error"); }
+  finally { setBusy(false); }
 });
 
 // ── Reset Session ─────────────────────────────────────────

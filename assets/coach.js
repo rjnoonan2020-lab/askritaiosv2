@@ -254,6 +254,12 @@ newWeekBtn.addEventListener("click", async function() {
     if (data.action === "reset_commitments") await saveCommitments([]);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       await saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) { return { text: t, status: "not_started", area: state.focusArea }; }));
+      var notify = document.createElement("div");
+      notify.className = "commit-notify";
+      notify.textContent = "✓ " + data.commitment_suggestions.length + " commitment" + (data.commitment_suggestions.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
+      chatEl.appendChild(notify);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
     }
     renderCommitments();
     document.querySelector("[data-tab='chat']").click();

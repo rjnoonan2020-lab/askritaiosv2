@@ -2,20 +2,37 @@ const SUPABASE_URL = "https://wjubibjkasoattmbqurf.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdWJpYmprYXNvYXR0bWJxdXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0ODAyMDEsImV4cCI6MjA4ODA1NjIwMX0.djzKshGnvgxqmD6PiKP5tnW0gjgKdqHyQcA_MHTCqqs";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const chatEl    = document.getElementById("chat");
-const msgEl     = document.getElementById("msg");
-const sendBtn   = document.getElementById("send");
-const resetBtn  = document.getElementById("reset");
-const statusEl  = document.getElementById("status");
-const commitsEl = document.getElementById("commitmentsList");
-const checkinBtn  = document.getElementById("checkin");
-const newWeekBtn  = document.getElementById("newWeek");
-const signOutBtn  = document.getElementById("signOutBtn");
+const chatEl       = document.getElementById("chat");
+const msgEl        = document.getElementById("msg");
+const sendBtn      = document.getElementById("send");
+const resetBtn     = document.getElementById("reset");
+const statusEl     = document.getElementById("status");
+const commitsEl    = document.getElementById("commitmentsList");
+const checkinBtn   = document.getElementById("checkin");
+const newWeekBtn   = document.getElementById("newWeek");
+const signOutBtn   = document.getElementById("signOutBtn");
+const focusPicker  = document.getElementById("focusPicker");
+const coachUI      = document.getElementById("coachInterface");
+const focusBadge   = document.getElementById("focusBadge");
+const changeFocus  = document.getElementById("changeFocus");
 
-document.querySelectorAll(".nav-tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+const FOCUS_OPENERS = {
+  "Reflection":     "Let's take a moment to reflect on your retirement so far. What's been the most surprising thing about this chapter of your life?",
+  "Activity":       "Let's talk about staying active. How would you describe your current level of physical activity, and how does it make you feel?",
+  "Emotions":       "It takes courage to check in with how you're really feeling. What emotions have been most present for you lately in retirement?",
+  "Connections":    "Relationships are so important in retirement. How connected do you feel to the people who matter most to you right now?",
+  "Meaning":        "Finding meaning is one of the most important parts of a fulfilling retirement. What activities or moments have felt most meaningful to you lately?",
+  "Leisure":        "Retirement is a wonderful time to explore how you spend your time. What do your days look like right now, and what would you love more of?",
+  "Learning":       "Keeping your mind engaged is a gift you give yourself. What are you curious about learning or exploring right now?",
+  "Contribution":   "Giving back can bring deep fulfillment. What causes, people, or communities do you feel called to contribute to right now?",
+  "Time":           "Time is your most valuable asset in retirement. How are you feeling about the way you're spending your days — is it intentional, or does it feel unstructured?",
+  "Finance & Home": "Your relationship with money and your living situation shapes so much of retirement. What feels settled, and what feels uncertain in this area?"
+};
+
+document.querySelectorAll(".nav-tab").forEach(function(tab) {
+  tab.addEventListener("click", function() {
+    document.querySelectorAll(".nav-tab").forEach(function(t) { t.classList.remove("active"); });
+    document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
     tab.classList.add("active");
     document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
   });
@@ -24,7 +41,8 @@ document.querySelectorAll(".nav-tab").forEach(tab => {
 let state = {
   memory: { timeline_note: "", themes: [], interests: [], constraints: [], people: [] },
   history: [],
-  weekly_momentum: { commitments: [], last_checkin: null }
+  weekly_momentum: { commitments: [], last_checkin: null },
+  focusArea: null
 };
 
 let currentUser = null;
@@ -35,18 +53,43 @@ async function initAuth() {
   if (!data.session) { window.location.href = "/login.html"; return; }
   currentUser = data.session.user;
   await loadState();
-  renderChat();
   renderCommitments();
+  showFocusPicker();
+}
+
+function showFocusPicker() {
+  focusPicker.style.display = "block";
+  coachUI.style.display = "none";
+}
+
+function showCoachUI(area) {
+  state.focusArea = area;
+  focusPicker.style.display = "none";
+  coachUI.style.display = "block";
+  focusBadge.textContent = area;
+  focusBadge.style.display = "inline-block";
+  renderChat();
   sendBtn.disabled = false;
   if (!state.history.length) {
-    const intro = "Hi, I'm RITA — your retirement coaching companion.\n\nWhat feels most uncertain or exciting about this next chapter for you?";
+    var intro = FOCUS_OPENERS[area] || "What feels most uncertain or exciting about this next chapter for you?";
     addBubble(intro, "rita");
     state.history.push({ role: "assistant", text: intro });
-    await saveHistory("assistant", intro);
+    saveHistory("assistant", intro);
   }
 }
 
-signOutBtn.addEventListener("click", async () => {
+document.querySelectorAll(".focus-card").forEach(function(card) {
+  card.addEventListener("click", function() {
+    var area = card.dataset.area;
+    showCoachUI(area);
+  });
+});
+
+changeFocus.addEventListener("click", function() {
+  showFocusPicker();
+});
+
+signOutBtn.addEventListener("click", async function() {
   await sb.auth.signOut();
   window.location.href = "/login.html";
 });
@@ -54,24 +97,24 @@ signOutBtn.addEventListener("click", async () => {
 async function loadState() {
   try {
     const { data } = await sb.from("conversation_history").select("role, content").eq("user_id", currentUser.id).order("created_at", { ascending: true });
-    if (data && data.length) state.history = data.map(r => ({ role: r.role, text: r.content }));
+    if (data && data.length) state.history = data.map(function(r) { return { role: r.role, text: r.content }; });
     const { data: commits } = await sb.from("commitments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: true });
-    if (commits && commits.length) state.weekly_momentum.commitments = commits.map(c => ({ id: c.id, text: c.text, status: c.status }));
+    if (commits && commits.length) state.weekly_momentum.commitments = commits.map(function(c) { return { id: c.id, text: c.text, status: c.status }; });
   } catch(e) { console.error("Load error", e); }
 }
 
 async function saveHistory(role, content) {
   if (!currentUser) return;
-  await sb.from("conversation_history").insert({ user_id: currentUser.id, role, content });
+  await sb.from("conversation_history").insert({ user_id: currentUser.id, role: role, content: content });
 }
 
 async function saveCommitments(commitments) {
   if (!currentUser) return;
   await sb.from("commitments").delete().eq("user_id", currentUser.id);
   if (commitments.length) {
-    await sb.from("commitments").insert(commitments.map(c => ({ user_id: currentUser.id, text: c.text, status: c.status || "not_started" })));
+    await sb.from("commitments").insert(commitments.map(function(c) { return { user_id: currentUser.id, text: c.text, status: c.status || "not_started" }; }));
     const { data } = await sb.from("commitments").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: true });
-    if (data) state.weekly_momentum.commitments = data.map(c => ({ id: c.id, text: c.text, status: c.status }));
+    if (data) state.weekly_momentum.commitments = data.map(function(c) { return { id: c.id, text: c.text, status: c.status }; });
   } else {
     state.weekly_momentum.commitments = [];
   }
@@ -79,7 +122,7 @@ async function saveCommitments(commitments) {
 
 async function updateCommitmentStatus(id, status) {
   if (!currentUser) return;
-  const { error } = await sb.from("commitments").update({ status }).eq("id", id).eq("user_id", currentUser.id);
+  const { error } = await sb.from("commitments").update({ status: status }).eq("id", id).eq("user_id", currentUser.id);
   if (error) console.error("Status update error", error);
 }
 
@@ -93,7 +136,7 @@ function setBusy(val) {
 }
 
 function addBubble(text, who) {
-  const div = document.createElement("div");
+  var div = document.createElement("div");
   div.className = "bubble " + (who === "rita" ? "rita" : "you");
   div.textContent = text;
   chatEl.appendChild(div);
@@ -102,12 +145,12 @@ function addBubble(text, who) {
 
 function renderChat() {
   chatEl.innerHTML = "";
-  state.history.forEach(m => addBubble(m.text, m.role === "assistant" ? "rita" : "you"));
+  state.history.forEach(function(m) { addBubble(m.text, m.role === "assistant" ? "rita" : "you"); });
 }
 
 function renderCommitments() {
   commitsEl.innerHTML = "";
-  const commits = state.weekly_momentum.commitments;
+  var commits = state.weekly_momentum.commitments;
   if (!commits.length) {
     commitsEl.innerHTML = '<div class="empty-state">No active commitments yet.<br>RITA will suggest some during your coaching conversation.</div>';
     return;
@@ -115,17 +158,14 @@ function renderCommitments() {
   commits.forEach(function(c) {
     var card = document.createElement("div");
     card.className = "commitment-card";
-    var doneBtn = '<button class="pill active-done" data-status="done" data-id="' + c.id + '" disabled>Done</button>';
-    var notStartedBtn = '<button class="pill ' + (c.status === "not_started" ? "active-not_started" : "") + '" data-status="not_started" data-id="' + c.id + '">Not started</button>';
-    var inProgressBtn = '<button class="pill ' + (c.status === "in_progress" ? "active-in_progress" : "") + '" data-status="in_progress" data-id="' + c.id + '">In progress</button>';
+    var areaTag = c.area ? '<span class="commit-area-tag">' + c.area + '</span>' : '';
     if (c.status === "done") {
-      card.innerHTML = '<div class="commitment-text">' + c.text + '</div><div class="status-pills">' + doneBtn + '</div>';
+      card.innerHTML = areaTag + '<div class="commitment-text">' + c.text + '</div><div class="status-pills"><button class="pill active-done" disabled>Done</button></div>';
     } else {
-      card.innerHTML = '<div class="commitment-text">' + c.text + '</div><div class="status-pills">' + notStartedBtn + inProgressBtn + '<button class="pill" data-status="done" data-id="' + c.id + '">Done</button></div>';
+      card.innerHTML = areaTag + '<div class="commitment-text">' + c.text + '</div><div class="status-pills"><button class="pill ' + (c.status === "not_started" ? "active-not_started" : "") + '" data-status="not_started" data-id="' + c.id + '">Not started</button><button class="pill ' + (c.status === "in_progress" ? "active-in_progress" : "") + '" data-status="in_progress" data-id="' + c.id + '">In progress</button><button class="pill" data-status="done" data-id="' + c.id + '">Done</button></div>';
     }
     commitsEl.appendChild(card);
   });
-
   commitsEl.querySelectorAll(".pill:not([disabled])").forEach(function(pill) {
     pill.addEventListener("click", async function() {
       var id = pill.dataset.id;
@@ -140,12 +180,12 @@ function renderCommitments() {
 }
 
 async function callCoach(userText, mode) {
-  const resp = await fetch("/.netlify/functions/rita-coach", {
+  var resp = await fetch("/.netlify/functions/rita-coach", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mode, userText, memory: state.memory, commitments: state.weekly_momentum.commitments, history: state.history.slice(-12) })
+    body: JSON.stringify({ mode: mode, userText: userText, focusArea: state.focusArea, memory: state.memory, commitments: state.weekly_momentum.commitments, history: state.history.slice(-12) })
   });
-  const data = await resp.json().catch(function() { return {}; });
+  var data = await resp.json().catch(function() { return {}; });
   if (!resp.ok) throw new Error(data.error || "Request failed");
   return data;
 }
@@ -164,7 +204,7 @@ sendBtn.addEventListener("click", async function() {
     var data = await callCoach(text, "coach");
     if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
-      await saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) { return { text: t, status: "not_started" }; }));
+      await saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) { return { text: t, status: "not_started", area: state.focusArea }; }));
     }
     var reply = data.coach_message || "Tell me more.";
     addBubble(reply, "rita");
@@ -213,7 +253,7 @@ newWeekBtn.addEventListener("click", async function() {
     await saveHistory("assistant", reply);
     if (data.action === "reset_commitments") await saveCommitments([]);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
-      await saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) { return { text: t, status: "not_started" }; }));
+      await saveCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) { return { text: t, status: "not_started", area: state.focusArea }; }));
     }
     renderCommitments();
     document.querySelector("[data-tab='chat']").click();
@@ -230,10 +270,7 @@ resetBtn.addEventListener("click", async function() {
   state.memory = { timeline_note: "", themes: [], interests: [], constraints: [], people: [] };
   renderChat();
   renderCommitments();
-  var intro = "Hi, I'm RITA — your retirement coaching companion.\n\nWhat feels most uncertain or exciting about this next chapter for you?";
-  addBubble(intro, "rita");
-  state.history.push({ role: "assistant", text: intro });
-  await saveHistory("assistant", intro);
+  showFocusPicker();
 });
 
 initAuth();

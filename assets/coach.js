@@ -17,7 +17,7 @@ const focusBadge   = document.getElementById("focusBadge");
 const changeFocus  = document.getElementById("changeFocus");
 
 const FOCUS_OPENERS = {
-  "Reflection":     "Let's take a moment to reflect on your retirement so far. What's been the most surprising thing about this chapter of your life?",
+  
   "Activity":       "Let's talk about staying active. How would you describe your current level of physical activity, and how does it make you feel?",
   "Emotions":       "It takes courage to check in with how you're really feeling. What emotions have been most present for you lately in retirement?",
   "Connections":    "Relationships are so important in retirement. How connected do you feel to the people who matter most to you right now?",

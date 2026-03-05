@@ -41,8 +41,7 @@
     "greeting": "<strong>Hi, I'm RITA!</strong><br>I'm the retirement lifestyle assistant for Lakeside Wealth Advisors. Ask me anything about life after work — hobbies, purpose, travel, routines, and more!",
     "hint": "✨ Retirement Lifestyle Assistant",
     "fullChatUrl": "/rita-free.html",
-    "disclaimer": "General info only — not financial, medical or legal advice.",
-    "accentColor": "#c8a96e"
+    "disclaimer": "General info only — not financial, medical or legal advice."
   },
   "sunrise": {
     "firmName": "Sunrise Financial",

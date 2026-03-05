@@ -8,10 +8,12 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Lato', sans-serif; background: #fdf8f3; color: #2c2c2c; min-height: 100vh; }
-    .header { background: #c8392b; padding: 40px; text-align: center; }
-    .header img { width: 64px; height: 64px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.4); object-fit: cover; margin-bottom: 16px; }
-    .header h1 { font-family: 'Playfair Display', serif; font-size: 36px; color: white; margin-bottom: 8px; }
-    .header p { color: rgba(255,255,255,0.85); font-size: 16px; max-width: 480px; margin: 0 auto; line-height: 1.6; }
+    .header { background: #d54050; padding: 40px; position: relative; }
+    .header-inner { display: flex; align-items: center; justify-content: center; gap: 24px; }
+    .rita-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.5); object-fit: cover; flex-shrink: 0; }
+    .header-text { text-align: left; }
+    .header-text h1 { font-family: 'Playfair Display', serif; font-size: 36px; color: white; margin-bottom: 8px; }
+    .header-text p { color: rgba(255,255,255,0.85); font-size: 16px; max-width: 480px; line-height: 1.6; }
     .main { max-width: 960px; margin: 0 auto; padding: 48px 24px; }
     .intro { text-align: center; margin-bottom: 48px; }
     .intro h2 { font-family: 'Playfair Display', serif; font-size: 28px; color: #1a2e4a; margin-bottom: 12px; }
@@ -29,29 +31,36 @@
     .card-footer .arrow { font-size: 18px; }
     .embed-section { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 32px; }
     .embed-section h3 { font-family: 'Playfair Display', serif; font-size: 22px; color: #1a2e4a; margin-bottom: 12px; }
-    .embed-section p { font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.7; }
-    .code-block { background: #1a2e4a; border-radius: 10px; padding: 20px 24px; font-family: 'Courier New', monospace; font-size: 13px; color: #a8d8b8; overflow-x: auto; }
+    .embed-section p { font-size: 14px; color: #666; line-height: 1.7; }
     .footer { text-align: center; padding: 32px; font-size: 13px; color: #999; border-top: 1px solid #e8e0d8; }
-    .footer a { color: #c8392b; text-decoration: none; }
+    .footer a { color: #d54050; text-decoration: none; }
+    .footer img { height: 52px; width: auto; margin-bottom: 12px; display: block; margin-left: auto; margin-right: auto; }
     @media (max-width: 768px) { .cards { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
+
   <div class="header">
-    <img src="/assets/rita-avatar.jpg" alt="RITA" onerror="this.style.display='none'" />
-    <h1>RITA™ Widget Demo Showcase</h1>
-    <p>See how the RITA retirement lifestyle assistant looks on different financial advisory websites — each fully branded to match the firm.</p>
+    <div class="header-inner">
+      <img src="rita-avatar.jpg" alt="RITA" class="rita-avatar" />
+      <div class="header-text">
+        <h1>RITA™ Widget Demo Showcase</h1>
+        <p>See how the RITA retirement lifestyle assistant looks on different financial advisory websites — each fully branded to match the firm.</p>
+      </div>
+    </div>
   </div>
+
   <div class="main">
     <div class="intro">
       <h2>One Widget. Every Brand.</h2>
       <p>Each firm gets their own embed code with their colors, their greeting, and their name. One line of code. No developers needed.</p>
     </div>
+
     <div class="cards">
-      <a href="/rita-demo-lakeside.html" class="card">
+      <a href="rita-demo-lakeside.html" class="card">
         <div class="card-header">
           <div class="card-swatch" style="background:#1a2e4a;">L</div>
-          <div class="card-tag" style="color:#c8a96e;">Navy & Gold</div>
+          <div class="card-tag" style="color:#c8a96e;">Navy &amp; Gold</div>
           <h3>Lakeside Wealth Advisors</h3>
           <p>Classic, sophisticated financial firm aesthetic with navy blue header and gold accents.</p>
         </div>
@@ -60,7 +69,8 @@
           <span class="arrow" style="color:#c8a96e;">→</span>
         </div>
       </a>
-      <a href="/rita-demo-sunrise.html" class="card">
+
+      <a href="rita-demo-sunrise.html" class="card">
         <div class="card-header">
           <div class="card-swatch" style="background:#e07b2a;">S</div>
           <div class="card-tag" style="color:#e07b2a;">Warm Orange</div>
@@ -72,7 +82,8 @@
           <span class="arrow" style="color:#e07b2a;">→</span>
         </div>
       </a>
-      <a href="/rita-demo-evergreen.html" class="card">
+
+      <a href="rita-demo-evergreen.html" class="card">
         <div class="card-header">
           <div class="card-swatch" style="background:#2e7d52;">E</div>
           <div class="card-tag" style="color:#2e7d52;">Forest Green</div>
@@ -85,46 +96,44 @@
         </div>
       </a>
     </div>
+
     <div class="embed-section">
       <h3>How Easy Is It to Install?</h3>
-      <p>Each subscribing firm receives their own embed code — one line of HTML. Their web person pastes it before the closing body tag and RITA appears instantly. No plugins, no API keys, no developers required.</p>
-      <div class="code-block">
-        &lt;!-- Lakeside Wealth Advisors --&gt;<br>
-        &lt;script src="https://coach.ask-rita.ai/assets/rita-widget.js?client=lakeside"&gt;&lt;/script&gt;<br><br>
-        &lt;!-- Sunrise Financial --&gt;<br>
-        &lt;script src="https://coach.ask-rita.ai/assets/rita-widget.js?client=sunrise"&gt;&lt;/script&gt;<br><br>
-        &lt;!-- Evergreen Advisors --&gt;<br>
-        &lt;script src="https://coach.ask-rita.ai/assets/rita-widget.js?client=evergreen"&gt;&lt;/script&gt;
-      </div>
+      <p>Each subscribing firm receives their own embed code — one line of HTML. Their web person pastes it before the closing &lt;/body&gt; tag and RITA appears instantly. No plugins, no API keys, no developers required.</p>
     </div>
+
     <div class="embed-section">
       <h3>Pricing</h3>
       <p>Simple monthly subscription. No setup fees. Cancel anytime.</p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;">
         <div style="border:1px solid #e8e0d8;border-radius:10px;padding:20px;text-align:center;">
           <div style="font-size:13px;color:#999;margin-bottom:4px;">Starter</div>
-          <div style="font-size:28px;font-weight:700;color:#c8392b;font-family:'Playfair Display',serif;">$79</div>
+          <div style="font-size:28px;font-weight:700;color:#d54050;font-family:'Playfair Display',serif;">$79</div>
           <div style="font-size:12px;color:#999;">/ month</div>
           <div style="font-size:12px;color:#666;margin-top:8px;line-height:1.5;">RITA branding · 1 site</div>
         </div>
-        <div style="border:2px solid #c8392b;border-radius:10px;padding:20px;text-align:center;position:relative;">
-          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#c8392b;color:white;font-size:10px;padding:2px 10px;border-radius:10px;font-weight:700;">POPULAR</div>
+        <div style="border:2px solid #d54050;border-radius:10px;padding:20px;text-align:center;position:relative;">
+          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#d54050;color:white;font-size:10px;padding:2px 10px;border-radius:10px;font-weight:700;">POPULAR</div>
           <div style="font-size:13px;color:#999;margin-bottom:4px;">Professional</div>
-          <div style="font-size:28px;font-weight:700;color:#c8392b;font-family:'Playfair Display',serif;">$149</div>
+          <div style="font-size:28px;font-weight:700;color:#d54050;font-family:'Playfair Display',serif;">$149</div>
           <div style="font-size:12px;color:#999;">/ month</div>
           <div style="font-size:12px;color:#666;margin-top:8px;line-height:1.5;">White-labeled · 1 site</div>
         </div>
         <div style="border:1px solid #e8e0d8;border-radius:10px;padding:20px;text-align:center;">
           <div style="font-size:13px;color:#999;margin-bottom:4px;">Premium</div>
-          <div style="font-size:28px;font-weight:700;color:#c8392b;font-family:'Playfair Display',serif;">$249</div>
+          <div style="font-size:28px;font-weight:700;color:#d54050;font-family:'Playfair Display',serif;">$249</div>
           <div style="font-size:12px;color:#999;">/ month</div>
           <div style="font-size:12px;color:#666;margin-top:8px;line-height:1.5;">White-labeled · 3 sites · Reports</div>
         </div>
       </div>
     </div>
+
   </div>
+
   <div class="footer">
-    <p>RITA™ Widget by <a href="https://thirdactadvisors.com" target="_blank">Third Act Advisors</a> · Wheaton, IL · rob@thirdactadvisors.com · (630) 517-5967</p>
+    <img src="Teal_Modern_Consulting_Logo__1_.jpg" alt="Third Act Advisors" />
+    <p>© 2026 Third Act Advisors, LLC &nbsp;·&nbsp; RITA™ Widget &nbsp;·&nbsp; Wheaton, IL &nbsp;·&nbsp; <a href="https://thirdactadvisors.com" target="_blank">thirdactadvisors.com</a></p>
   </div>
+
 </body>
 </html>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,6 +45,9 @@
     .team-card p { font-size: 13px; color: #888; }
     footer { background: #1a2e4a; color: rgba(255,255,255,0.6); padding: 32px 40px; text-align: center; font-size: 13px; }
     footer span { color: #c8a96e; }
+    .rita-fab-preview { position: fixed; bottom: 28px; right: 28px; width: 60px; height: 60px; border-radius: 50%; background: #1a2e4a; box-shadow: 0 4px 16px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; border: 3px solid #c8a96e; }
+    .rita-fab-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .rita-fab-label { position: fixed; bottom: 96px; right: 28px; background: #1a2e4a; color: white; font-size: 12px; padding: 6px 12px; border-radius: 20px; font-family: 'Lato', sans-serif; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
     @media (max-width: 768px) { .cards, .team-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 32px; } .nav-links { display: none; } }
   </style>
 </head>
@@ -78,7 +80,7 @@
   <div class="rita-banner">
     <h2>Have Retirement Questions?</h2>
     <p>Meet RITA — our AI retirement companion available 24/7 to answer your questions about life after work.</p>
-    <button class="rita-banner-btn" onclick="document.getElementById('rita-fab').click()">Ask RITA Now →</button>
+    <button class="rita-banner-btn">Ask RITA Now →</button>
   </div>
   <div class="section">
     <div class="section-tag">Our Team</div>
@@ -91,6 +93,9 @@
     </div>
   </div>
   <footer><p>© 2026 Lakeside Wealth Advisors, LLC · <span>Sample page for demonstration purposes</span> · Powered by RITA™ from Third Act Advisors</p></footer>
-  <script src="https://darling-dragon-f1fb92.netlify.app/assets/rita-widget.js?client=lakeside"></script>
+  <div class="rita-fab-label">Ask RITA ✨</div>
+  <div class="rita-fab-preview">
+    <img src="rita-avatar.jpg" alt="RITA" />
+  </div>
 </body>
 </html>

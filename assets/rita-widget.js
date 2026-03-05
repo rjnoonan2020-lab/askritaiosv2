@@ -31,10 +31,10 @@
     }
     #rita-iframe-wrap {
       position: fixed !important;
-      bottom: 100px !important;
+      top: 60px !important;
       right: 24px !important;
       width: 370px !important;
-      height: 540px !important;
+      height: calc(100vh - 140px) !important;
       z-index: 2147483646 !important;
       border-radius: 20px !important;
       overflow: hidden !important;

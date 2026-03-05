@@ -1,1 +1,84 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evergreen Advisors — Sample</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Source Sans Pro', sans-serif; color: #1a3a26; background: #fff; }
+    nav { background: #2e7d52; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: white; font-weight: 600; letter-spacing: 0.5px; }
+    .nav-logo span { color: #a8d8b8; }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 14px; }
+    .nav-links a:hover { color: white; }
+    .hero { background: linear-gradient(160deg, #1e5c3a 0%, #2e7d52 50%, #3a9465 100%); padding: 80px 40px; text-align: center; color: white; }
+    .hero-tag { display: inline-block; background: rgba(168,216,184,0.2); color: #a8d8b8; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 6px 16px; border-radius: 20px; margin-bottom: 24px; border: 1px solid rgba(168,216,184,0.3); }
+    .hero h1 { font-family: 'Cormorant Garamond', serif; font-size: 48px; line-height: 1.2; margin-bottom: 20px; max-width: 640px; margin-left: auto; margin-right: auto; font-weight: 600; }
+    .hero p { font-size: 18px; color: rgba(255,255,255,0.8); max-width: 500px; margin: 0 auto 36px; line-height: 1.7; font-weight: 300; }
+    .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: #a8d8b8; color: #1a3a26; padding: 14px 32px; border-radius: 4px; font-size: 15px; font-weight: 600; text-decoration: none; }
+    .btn-primary:hover { background: #88c8a0; }
+    .btn-secondary { background: transparent; color: white; padding: 14px 32px; border-radius: 4px; font-size: 15px; border: 1px solid rgba(255,255,255,0.4); text-decoration: none; }
+    .section { padding: 72px 40px; max-width: 1100px; margin: 0 auto; }
+    .section-tag { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #2e7d52; margin-bottom: 12px; font-weight: 600; }
+    .section h2 { font-family: 'Cormorant Garamond', serif; font-size: 36px; margin-bottom: 16px; color: #1a3a26; }
+    .section-sub { font-size: 16px; color: #4a7060; max-width: 560px; line-height: 1.7; margin-bottom: 48px; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .card { border: 1px solid #b8dfc8; border-radius: 8px; padding: 28px; transition: box-shadow 0.2s; }
+    .card:hover { box-shadow: 0 4px 24px rgba(46,125,82,0.1); }
+    .card-icon { font-size: 32px; margin-bottom: 16px; }
+    .card h3 { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: #1a3a26; margin-bottom: 10px; }
+    .card p { font-size: 14px; color: #4a7060; line-height: 1.7; }
+    .rita-banner { background: linear-gradient(135deg, #eaf4ee 0%, #f4fbf6 100%); border-top: 1px solid #b8dfc8; border-bottom: 1px solid #b8dfc8; padding: 56px 40px; text-align: center; }
+    .rita-banner h2 { font-family: 'Cormorant Garamond', serif; font-size: 34px; color: #1a3a26; margin-bottom: 12px; }
+    .rita-banner p { font-size: 16px; color: #4a7060; max-width: 480px; margin: 0 auto 28px; line-height: 1.7; }
+    .rita-banner-btn { background: #2e7d52; color: white; padding: 14px 32px; border-radius: 4px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; }
+    footer { background: #1a3a26; color: rgba(255,255,255,0.6); padding: 32px 40px; text-align: center; font-size: 13px; }
+    footer span { color: #a8d8b8; }
+    @media (max-width: 768px) { .cards { grid-template-columns: 1fr; } .hero h1 { font-size: 32px; } .nav-links { display: none; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-logo">Evergreen <span>Advisors</span></div>
+    <div class="nav-links">
+      <a href="#">Services</a><a href="#">Retirement</a><a href="#">Our Team</a><a href="#">Contact</a>
+    </div>
+  </nav>
+  <div class="hero">
+    <div class="hero-tag">Sustainable Retirement Planning</div>
+    <h1>Grow Into the Retirement You Deserve</h1>
+    <p>Like the evergreen tree, retirement should be a season of steady growth, resilience, and enduring purpose.</p>
+    <div class="hero-btns">
+      <a href="#" class="btn-primary">Begin Your Journey</a>
+      <a href="#" class="btn-secondary">Our Approach</a>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-tag">What We Offer</div>
+    <h2>A Whole-Life Approach to Retirement</h2>
+    <p class="section-sub">We believe retirement is a beginning, not an ending. Our approach addresses your finances and your flourishing.</p>
+    <div class="cards">
+      <div class="card"><div class="card-icon">🌲</div><h3>Sustainable Income</h3><p>Build income streams that grow with you through every season of retirement.</p></div>
+      <div class="card"><div class="card-icon">🌱</div><h3>Purpose & Meaning</h3><p>Discover what energizes you and build a retirement life rooted in contribution.</p></div>
+      <div class="card"><div class="card-icon">🍃</div><h3>Legacy Planning</h3><p>Ensure your values and wealth are passed on to the people and causes you care about.</p></div>
+    </div>
+  </div>
+  <div class="rita-banner">
+    <h2>Have Retirement Questions?</h2>
+    <p>RITA is our retirement lifestyle assistant — here to explore ideas, answer questions, and help you imagine what's next.</p>
+    <button class="rita-banner-btn" onclick="document.getElementById('rita-fab').click()">Ask RITA →</button>
+  </div>
+  <div class="section">
+    <div class="section-tag">Sample Page</div>
+    <h2>This is a Demo</h2>
+    <p class="section-sub">This page shows how the RITA™ widget looks on a nature-inspired green financial advisory website. The widget in the bottom right matches Evergreen Advisors' color palette.</p>
+  </div>
+  <footer><p>© 2026 Evergreen Advisors, LLC · <span>Sample demonstration page</span> · Powered by RITA™ from Third Act Advisors</p></footer>
+  <script src="https://darling-dragon-f1fb92.netlify.app/assets/rita-widget.js?client=evergreen"></script>
+</body>
+</html>

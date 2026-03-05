@@ -555,12 +555,31 @@
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ritaSend(); }
     });
 
-    // Show hint for 8 seconds then fade
-    setTimeout(function() {
-      var hint = document.getElementById("ritaHint");
-      if (hint) { hint.style.transition = "opacity 0.5s"; hint.style.opacity = "0"; }
-      setTimeout(function() { var hint = document.getElementById("ritaHint"); if (hint) hint.style.display = "none"; }, 500);
-    }, 8000);
+    // Hide hint on first click, reappear on hover
+    var hintDismissed = false;
+    document.getElementById("rita-fab").addEventListener("mouseenter", function() {
+      if (hintDismissed) {
+        var hint = document.getElementById("ritaHint");
+        hint.style.display = "block";
+        hint.style.opacity = "1";
+      }
+    });
+    document.getElementById("rita-fab").addEventListener("mouseleave", function() {
+      if (hintDismissed) {
+        var hint = document.getElementById("ritaHint");
+        hint.style.opacity = "0";
+        setTimeout(function() { hint.style.display = "none"; }, 300);
+      }
+    });
+    document.getElementById("rita-fab").addEventListener("click", function() {
+      if (!hintDismissed) {
+        hintDismissed = true;
+        var hint = document.getElementById("ritaHint");
+        hint.style.transition = "opacity 0.3s";
+        hint.style.opacity = "0";
+        setTimeout(function() { hint.style.display = "none"; }, 300);
+      }
+    });
   </script>
 
 </body>

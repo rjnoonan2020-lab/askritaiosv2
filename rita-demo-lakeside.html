@@ -1,1 +1,96 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lakeside Wealth Advisors — Sample</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Lato', sans-serif; color: #2c2c2c; background: #fff; }
+    nav { background: #1a2e4a; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .nav-logo { color: white; font-family: 'Playfair Display', serif; font-size: 20px; letter-spacing: 0.5px; }
+    .nav-logo span { color: #c8a96e; }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .nav-links a:hover { color: white; }
+    .hero { background: linear-gradient(135deg, #1a2e4a 0%, #2a4a6e 100%); padding: 80px 40px; text-align: center; color: white; }
+    .hero-tag { display: inline-block; background: rgba(200,169,110,0.2); color: #c8a96e; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 6px 16px; border-radius: 20px; margin-bottom: 24px; border: 1px solid rgba(200,169,110,0.3); }
+    .hero h1 { font-family: 'Playfair Display', serif; font-size: 48px; line-height: 1.2; margin-bottom: 20px; max-width: 680px; margin-left: auto; margin-right: auto; }
+    .hero p { font-size: 18px; color: rgba(255,255,255,0.75); max-width: 520px; margin: 0 auto 36px; line-height: 1.7; font-weight: 300; }
+    .hero-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: #c8a96e; color: #1a2e4a; padding: 14px 32px; border-radius: 4px; font-size: 15px; font-weight: 700; text-decoration: none; transition: background 0.2s; }
+    .btn-primary:hover { background: #b8954e; }
+    .btn-secondary { background: transparent; color: white; padding: 14px 32px; border-radius: 4px; font-size: 15px; border: 1px solid rgba(255,255,255,0.4); text-decoration: none; transition: all 0.2s; }
+    .btn-secondary:hover { border-color: white; background: rgba(255,255,255,0.1); }
+    .section { padding: 72px 40px; max-width: 1100px; margin: 0 auto; }
+    .section-tag { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #c8a96e; margin-bottom: 12px; font-weight: 700; }
+    .section h2 { font-family: 'Playfair Display', serif; font-size: 36px; margin-bottom: 16px; color: #1a2e4a; }
+    .section-sub { font-size: 16px; color: #666; max-width: 580px; line-height: 1.7; margin-bottom: 48px; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .card { border: 1px solid #e8e8e8; border-radius: 8px; padding: 28px; transition: box-shadow 0.2s; }
+    .card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    .card-icon { font-size: 32px; margin-bottom: 16px; }
+    .card h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: #1a2e4a; margin-bottom: 10px; }
+    .card p { font-size: 14px; color: #666; line-height: 1.7; }
+    .rita-banner { background: linear-gradient(135deg, #fdf1f0 0%, #fef8f0 100%); border-top: 1px solid #f0ddd9; border-bottom: 1px solid #f0ddd9; padding: 56px 40px; text-align: center; }
+    .rita-banner h2 { font-family: 'Playfair Display', serif; font-size: 32px; color: #1a2e4a; margin-bottom: 12px; }
+    .rita-banner p { font-size: 16px; color: #666; max-width: 500px; margin: 0 auto 28px; line-height: 1.7; }
+    .rita-banner-btn { background: #1a2e4a; color: white; padding: 14px 32px; border-radius: 4px; font-size: 15px; font-weight: 700; border: none; cursor: pointer; transition: background 0.2s; }
+    .rita-banner-btn:hover { background: #0f1e32; }
+    .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .team-card { text-align: center; }
+    .team-avatar { width: 80px; height: 80px; border-radius: 50%; background: #e8eef5; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .team-card h4 { font-family: 'Playfair Display', serif; font-size: 17px; color: #1a2e4a; margin-bottom: 4px; }
+    .team-card p { font-size: 13px; color: #888; }
+    footer { background: #1a2e4a; color: rgba(255,255,255,0.6); padding: 32px 40px; text-align: center; font-size: 13px; }
+    footer span { color: #c8a96e; }
+    @media (max-width: 768px) { .cards, .team-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 32px; } .nav-links { display: none; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-logo">Lakeside <span>Wealth</span> Advisors</div>
+    <div class="nav-links">
+      <a href="#">Services</a><a href="#">Retirement</a><a href="#">Our Team</a><a href="#">Contact</a>
+    </div>
+  </nav>
+  <div class="hero">
+    <div class="hero-tag">Retirement Planning Specialists</div>
+    <h1>Your Financial Future, Thoughtfully Planned</h1>
+    <p>We help you build the retirement you've always imagined — financially secure and deeply fulfilling.</p>
+    <div class="hero-btns">
+      <a href="#" class="btn-primary">Schedule a Consultation</a>
+      <a href="#" class="btn-secondary">Learn More</a>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-tag">What We Offer</div>
+    <h2>Comprehensive Retirement Services</h2>
+    <p class="section-sub">From financial planning to lifestyle coaching, we address every dimension of a successful retirement.</p>
+    <div class="cards">
+      <div class="card"><div class="card-icon">📊</div><h3>Retirement Income Planning</h3><p>Structure your assets to generate reliable income throughout your retirement years with confidence.</p></div>
+      <div class="card"><div class="card-icon">🛡️</div><h3>Risk Management</h3><p>Protect what you've built with smart strategies for insurance, longevity risk, and market volatility.</p></div>
+      <div class="card"><div class="card-icon">🌱</div><h3>Lifestyle & Purpose Coaching</h3><p>Financial security is only half the picture. We help you plan the life you want to live in retirement.</p></div>
+    </div>
+  </div>
+  <div class="rita-banner">
+    <h2>Have Retirement Questions?</h2>
+    <p>Meet RITA — our AI retirement companion available 24/7 to answer your questions about life after work.</p>
+    <button class="rita-banner-btn" onclick="document.getElementById('rita-fab').click()">Ask RITA Now →</button>
+  </div>
+  <div class="section">
+    <div class="section-tag">Our Team</div>
+    <h2>Advisors Who Truly Understand Retirement</h2>
+    <p class="section-sub">Our team brings decades of experience helping clients navigate financial and life transitions.</p>
+    <div class="team-grid">
+      <div class="team-card"><div class="team-avatar">👨‍💼</div><h4>James Whitfield, CFP</h4><p>Senior Retirement Strategist</p></div>
+      <div class="team-card"><div class="team-avatar">👩‍💼</div><h4>Sandra Chen, CPA</h4><p>Tax & Income Specialist</p></div>
+      <div class="team-card"><div class="team-avatar">👨‍💼</div><h4>Marcus Okafor, ChFC</h4><p>Estate & Legacy Planner</p></div>
+    </div>
+  </div>
+  <footer><p>© 2026 Lakeside Wealth Advisors, LLC · <span>Sample page for demonstration purposes</span> · Powered by RITA™ from Third Act Advisors</p></footer>
+  <script src="https://darling-dragon-f1fb92.netlify.app/assets/rita-widget.js?client=lakeside"></script>
+</body>
+</html>

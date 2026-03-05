@@ -18,7 +18,7 @@
       border: none;
       cursor: pointer;
       box-shadow: 0 4px 20px rgba(200,57,43,0.4);
-      z-index: 9999;
+      z-index: 2147483647;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -46,17 +46,18 @@
       position: fixed;
       bottom: 100px;
       right: 24px;
-      width: 380px;
-      height: 560px;
+      width: 360px;
+      height: 500px;
       border-radius: 20px;
       box-shadow: 0 8px 40px rgba(0,0,0,0.18);
-      z-index: 9998;
+      z-index: 2147483647;
       overflow: hidden;
       display: none;
       flex-direction: column;
       background: #fff;
       border: 1px solid #e8e0d8;
       animation: ritaSlideUp 0.25s ease;
+      transform: translateZ(0);
     }
     #rita-widget-panel.open {
       display: flex;

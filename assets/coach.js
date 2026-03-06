@@ -16,6 +16,7 @@ const coachUI     = document.getElementById("coachInterface");
 const focusBadge  = document.getElementById("focusBadge");
 
 const FOCUS_OPENERS = {
+  "Reflection":     "Taking time to reflect is one of the most valuable things you can do in retirement. How would you say your retirement has gone so far — what's felt right, and what's surprised you?",
   "Activity":       "Let's talk about staying active. How would you describe your current level of physical activity, and how does it make you feel?",
   "Emotions":       "It takes courage to check in with how you're really feeling. What emotions have been most present for you lately in retirement?",
   "Connections":    "Relationships are so important in retirement. How connected do you feel to the people who matter most to you right now?",
@@ -24,19 +25,19 @@ const FOCUS_OPENERS = {
   "Learning":       "Keeping your mind engaged is a gift you give yourself. What are you curious about learning or exploring right now?",
   "Contribution":   "Giving back can bring deep fulfillment. What causes, people, or communities do you feel called to contribute to right now?",
   "Time":           "Time is your most valuable asset in retirement. How are you feeling about the way you're spending your days — is it intentional, or does it feel unstructured?",
-  "Reflection": "Taking time to reflect is one of the most valuable things you can do in retirement. How would you say your retirement has gone so far — what's felt right, and what's surprised you?",
   "Finance & Home": "Your relationship with money and your living situation shapes so much of retirement. What feels settled, and what feels uncertain in this area?"
 };
 
 var FOCUS_AREAS = [
-  { area: "Activity", emoji: "🏃" },
-  { area: "Emotions", emoji: "💛" },
-  { area: "Connections", emoji: "👥" },
-  { area: "Meaning", emoji: "🎯" },
-  { area: "Leisure", emoji: "🎨" },
-  { area: "Learning", emoji: "📚" },
-  { area: "Contribution", emoji: "🤝" },
-  { area: "Time", emoji: "⏰" },
+  { area: "Reflection",     emoji: "🪞" },
+  { area: "Activity",       emoji: "🏃" },
+  { area: "Emotions",       emoji: "💛" },
+  { area: "Connections",    emoji: "👥" },
+  { area: "Meaning",        emoji: "🎯" },
+  { area: "Leisure",        emoji: "🎨" },
+  { area: "Learning",       emoji: "📚" },
+  { area: "Contribution",   emoji: "🤝" },
+  { area: "Time",           emoji: "⏰" },
   { area: "Finance & Home", emoji: "🏠" }
 ];
 

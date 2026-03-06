@@ -81,6 +81,8 @@ var currentUser = null;
 var busy = false;
 var journalBusy = false;
 var journalOpened = false;
+var journalAwaitingClosing = false;
+var journalAwaitingFinal = false;
 
 function getWeekOf() {
   var now = new Date();
@@ -131,6 +133,8 @@ async function startFocusArea(area) {
   state.history = [];
   state.journalHistory = [];
   journalOpened = false;
+  journalAwaitingClosing = false;
+  journalAwaitingFinal = false;
   focusBadge.textContent = area;
   focusBadge.style.display = "inline-block";
   journalBadge.textContent = area + " — Journal";
@@ -447,21 +451,43 @@ journalSendBtn.addEventListener("click", async function() {
   journalBusy = true;
   journalSendBtn.disabled = true;
   setJournalStatus("RITA is reflecting…");
+
   try {
-    var data = await callCoach(text, "reflect", state.journalHistory);
+    var journalLimit = JOURNAL_ACTION_AREAS.includes(state.focusArea) ? 2 : 3;
+    var userMessageCount = state.journalHistory.filter(function(m) { return m.role === "user"; }).length;
+
+    var mode;
+    if (journalAwaitingFinal) {
+      mode = "reflect_final";
+    } else if (journalAwaitingClosing) {
+      mode = "reflect_closing";
+    } else {
+      mode = "reflect";
+    }
+
+    var data = await callCoach(text, mode, state.journalHistory);
     var reply = data.coach_message || "Thank you for sharing that.";
     addBubble(journalChatEl, reply, "rita");
     state.journalHistory.push({ role: "assistant", text: reply });
     await saveHistory("assistant", reply, "journal");
     setJournalStatus("");
 
-    var journalLimit = JOURNAL_ACTION_AREAS.includes(state.focusArea) ? 2 : 3;
-    var userMessageCount = state.journalHistory.filter(function(m) { return m.role === "user"; }).length;
-
-    if (userMessageCount >= journalLimit) {
+    if (journalAwaitingFinal) {
+      // Session complete — disable input
       journalMsgEl.disabled = true;
       journalSendBtn.disabled = true;
       journalMsgEl.placeholder = "Journal session complete. Start a new focus area to reflect again.";
+    } else if (journalAwaitingClosing) {
+      // User responded to closing prompt — next is the final message
+      journalAwaitingClosing = false;
+      journalAwaitingFinal = true;
+      journalSendBtn.disabled = false;
+      journalMsgEl.placeholder = "Share a final thought, or type 'done' to complete your session…";
+    } else if (userMessageCount >= journalLimit) {
+      // Cap reached — next exchange is the closing prompt
+      journalAwaitingClosing = true;
+      journalSendBtn.disabled = false;
+      journalMsgEl.placeholder = "Is there anything else you'd like to add?";
     } else {
       journalSendBtn.disabled = false;
     }
@@ -541,6 +567,8 @@ resetBtn.addEventListener("click", async function() {
   chatEl.innerHTML = "";
   journalChatEl.innerHTML = "";
   journalOpened = false;
+  journalAwaitingClosing = false;
+  journalAwaitingFinal = false;
   renderCommitments();
   showFocusPicker();
 });

@@ -23,7 +23,12 @@
     <div id="focusPicker">
       <p class="focus-prompt">What would you like to focus on today?</p>
       <div class="focus-grid">
-        
+
+        <button class="focus-card" data-area="Reflection" data-emoji="🪞">
+          <span class="focus-emoji">🪞</span>
+          <span class="focus-label">Reflection</span>
+          <span class="focus-sub">How has your retirement journey gone?</span>
+        </button>
         <button class="focus-card" data-area="Activity" data-emoji="🏃">
           <span class="focus-emoji">🏃</span>
           <span class="focus-label">Activity</span>
@@ -69,6 +74,7 @@
           <span class="focus-label">Finance & Home</span>
           <span class="focus-sub">Your relationship with money and home.</span>
         </button>
+
       </div>
     </div>
 
@@ -96,16 +102,16 @@
           <button class="btn secondary" id="reset" type="button" style="font-size:13px;padding:7px 14px;">Reset session</button>
         </div>
         <div class="focus-switch" id="focusSwitch"></div>
-        </div>
       </div>
 
       <div class="tab-panel" id="tab-momentum">
         <div id="commitmentsList"></div>
         <div class="checkin-area">
           <button class="btn" id="checkin" type="button">How did I do this week?</button>
-<button class="btn secondary" id="newWeek" type="button">Start fresh for next week</button>
+          <button class="btn secondary" id="newWeek" type="button">Start fresh for next week</button>
         </div>
       </div>
+
     </div>
 
   </div>

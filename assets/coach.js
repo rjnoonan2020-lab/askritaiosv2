@@ -2,20 +2,24 @@ const SUPABASE_URL = "https://wjubibjkasoattmbqurf.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdWJpYmprYXNvYXR0bWJxdXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0ODAyMDEsImV4cCI6MjA4ODA1NjIwMX0.djzKshGnvgxqmD6PiKP5tnW0gjgKdqHyQcA_MHTCqqs";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const chatEl      = document.getElementById("chat");
-const msgEl       = document.getElementById("msg");
-const sendBtn     = document.getElementById("send");
-const resetBtn    = document.getElementById("reset");
-const statusEl    = document.getElementById("status");
-const commitsEl   = document.getElementById("commitmentsList");
-const checkinBtn  = document.getElementById("checkin");
-const newWeekBtn  = document.getElementById("newWeek");
-const focusPicker = document.getElementById("focusPicker");
-const coachUI     = document.getElementById("coachInterface");
-const focusBadge  = document.getElementById("focusBadge");
+const chatEl        = document.getElementById("chat");
+const msgEl         = document.getElementById("msg");
+const sendBtn       = document.getElementById("send");
+const resetBtn      = document.getElementById("reset");
+const statusEl      = document.getElementById("status");
+const commitsEl     = document.getElementById("commitmentsList");
+const checkinBtn    = document.getElementById("checkin");
+const newWeekBtn    = document.getElementById("newWeek");
+const focusPicker   = document.getElementById("focusPicker");
+const coachUI       = document.getElementById("coachInterface");
+const focusBadge    = document.getElementById("focusBadge");
+const journalChatEl = document.getElementById("journalChat");
+const journalMsgEl  = document.getElementById("journalMsg");
+const journalSendBtn= document.getElementById("journalSend");
+const journalStatus = document.getElementById("journalStatus");
+const journalBadge  = document.getElementById("journalBadge");
 
 const FOCUS_OPENERS = {
-  "Reflection":     "Taking time to reflect is one of the most valuable things you can do in retirement. How would you say your retirement has gone so far — what's felt right, and what's surprised you?",
   "Activity":       "Let's talk about staying active. How would you describe your current level of physical activity, and how does it make you feel?",
   "Emotions":       "It takes courage to check in with how you're really feeling. What emotions have been most present for you lately in retirement?",
   "Connections":    "Relationships are so important in retirement. How connected do you feel to the people who matter most to you right now?",
@@ -27,8 +31,19 @@ const FOCUS_OPENERS = {
   "Finance & Home": "Your relationship with money and your living situation shapes so much of retirement. What feels settled, and what feels uncertain in this area?"
 };
 
+const JOURNAL_OPENERS = {
+  "Activity":       "Let's reflect on your activity journey. Looking back since you retired, how has your relationship with physical activity changed?",
+  "Emotions":       "Retirement stirs up so many feelings. Looking back, what emotions have surprised you most about this chapter of your life?",
+  "Connections":    "Relationships shift in retirement in ways we don't always expect. Looking back, which connections have grown stronger, and which have faded?",
+  "Meaning":        "The search for meaning is deeply personal. Reflecting back, what moments or experiences have felt most meaningful since you retired?",
+  "Leisure":        "How you spend your time says a lot about who you're becoming. Looking back, what have you discovered about what truly brings you joy?",
+  "Learning":       "Retirement opens up so much space for curiosity. Reflecting back, what have you learned about yourself — not just new skills, but who you are?",
+  "Contribution":   "Giving back takes many forms. Looking back, what ways of contributing have felt most aligned with who you are?",
+  "Time":           "Time feels different in retirement. Reflecting back, how has your sense of time and daily rhythm evolved since you stopped working?",
+  "Finance & Home": "Your relationship with money and home evolves in retirement. Looking back, what has shifted in how you think about security and what home means to you?"
+};
+
 var FOCUS_AREAS = [
-  { area: "Reflection",     emoji: "🪞" },
   { area: "Activity",       emoji: "🏃" },
   { area: "Emotions",       emoji: "💛" },
   { area: "Connections",    emoji: "👥" },
@@ -46,18 +61,24 @@ document.querySelectorAll(".nav-tab").forEach(function(tab) {
     document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
     tab.classList.add("active");
     document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "journal" && journalChatEl.innerHTML === "") {
+      startJournal();
+    }
   });
 });
 
 var state = {
   memory: { timeline_note: "", themes: [], interests: [], constraints: [], people: [] },
   history: [],
+  journalHistory: [],
   weekly_momentum: { commitments: [], last_checkin: null },
   focusArea: null
 };
 
 var currentUser = null;
 var busy = false;
+var journalBusy = false;
+var journalOpened = false;
 
 function getWeekOf() {
   var now = new Date();
@@ -106,15 +127,20 @@ function renderFocusSwitch(currentArea) {
 async function startFocusArea(area) {
   state.focusArea = area;
   state.history = [];
+  state.journalHistory = [];
+  journalOpened = false;
   focusBadge.textContent = area;
   focusBadge.style.display = "inline-block";
+  journalBadge.textContent = area + " — Journal";
+  journalBadge.style.display = "inline-block";
   renderFocusSwitch(area);
   chatEl.innerHTML = "";
+  journalChatEl.innerHTML = "";
   sendBtn.disabled = false;
   focusPicker.style.display = "none";
   coachUI.style.display = "block";
 
-  var priorHistory = await loadAreaHistory(area);
+  var priorHistory = await loadAreaHistory(area, "coach");
 
   if (priorHistory && priorHistory.length >= 2) {
     setBusy(true);
@@ -134,34 +160,80 @@ async function startFocusArea(area) {
       });
       var data = await resp.json();
       var opener = data.coach_message || FOCUS_OPENERS[area];
-      addBubble(opener, "rita");
+      addBubble(chatEl, opener, "rita");
       state.history.push({ role: "assistant", text: opener });
-      await saveHistory("assistant", opener);
+      await saveHistory("assistant", opener, "coach");
     } catch(e) {
       var fallback = FOCUS_OPENERS[area];
-      addBubble(fallback, "rita");
+      addBubble(chatEl, fallback, "rita");
       state.history.push({ role: "assistant", text: fallback });
-      await saveHistory("assistant", fallback);
+      await saveHistory("assistant", fallback, "coach");
     } finally {
       setBusy(false);
       setStatus("");
     }
   } else {
     var intro = FOCUS_OPENERS[area] || "What would you like to explore today?";
-    addBubble(intro, "rita");
+    addBubble(chatEl, intro, "rita");
     state.history.push({ role: "assistant", text: intro });
-    await saveHistory("assistant", intro);
+    await saveHistory("assistant", intro, "coach");
   }
 }
 
-async function loadAreaHistory(area) {
+async function startJournal() {
+  if (!state.focusArea || journalOpened) return;
+  journalOpened = true;
+  var area = state.focusArea;
+  var priorJournal = await loadAreaHistory(area, "journal");
+
+  if (priorJournal && priorJournal.length >= 2) {
+    setJournalStatus("RITA is preparing your journal…");
+    try {
+      var resp = await fetch("/.netlify/functions/rita-coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "reflect_returning",
+          userText: "",
+          focusArea: area,
+          memory: state.memory,
+          commitments: [],
+          history: priorJournal.slice(-8)
+        })
+      });
+      var data = await resp.json();
+      var opener = data.coach_message || JOURNAL_OPENERS[area];
+      addBubble(journalChatEl, opener, "rita");
+      state.journalHistory.push({ role: "assistant", text: opener });
+      await saveHistory("assistant", opener, "journal");
+    } catch(e) {
+      var fallback = JOURNAL_OPENERS[area];
+      addBubble(journalChatEl, fallback, "rita");
+      state.journalHistory.push({ role: "assistant", text: fallback });
+      await saveHistory("assistant", fallback, "journal");
+    } finally {
+      setJournalStatus("");
+    }
+  } else {
+    var intro = JOURNAL_OPENERS[area] || "Let's reflect. What comes to mind when you look back on your retirement so far?";
+    addBubble(journalChatEl, intro, "rita");
+    state.journalHistory.push({ role: "assistant", text: intro });
+    await saveHistory("assistant", intro, "journal");
+  }
+}
+
+async function loadAreaHistory(area, conversationType) {
   try {
-    var r = await sb.from("conversation_history")
+    var query = sb.from("conversation_history")
       .select("role, content")
       .eq("user_id", currentUser.id)
       .eq("focus_area", area)
       .order("created_at", { ascending: false })
       .limit(20);
+    if (conversationType) {
+      query = query.eq("conversation_type", conversationType);
+    }
+    var r = await query;
     if (!r.data || !r.data.length) return [];
     return r.data.reverse().map(function(row) { return { role: row.role, text: row.content }; });
   } catch(e) { return []; }
@@ -188,13 +260,14 @@ async function loadState() {
   } catch(e) { console.error("Load error", e); }
 }
 
-async function saveHistory(role, content) {
+async function saveHistory(role, content, conversationType) {
   if (!currentUser) return;
   await sb.from("conversation_history").insert({
     user_id: currentUser.id,
     role: role,
     content: content,
-    focus_area: state.focusArea
+    focus_area: state.focusArea,
+    conversation_type: conversationType || "coach"
   });
 }
 
@@ -235,6 +308,7 @@ async function updateCommitmentStatus(id, status) {
 }
 
 function setStatus(msg) { statusEl.textContent = msg || ""; }
+function setJournalStatus(msg) { journalStatus.textContent = msg || ""; }
 
 function setBusy(val) {
   busy = val;
@@ -243,12 +317,12 @@ function setBusy(val) {
   newWeekBtn.disabled = val;
 }
 
-function addBubble(text, who) {
+function addBubble(container, text, who) {
   var div = document.createElement("div");
   div.className = "bubble " + (who === "rita" ? "rita" : "you");
   div.textContent = text;
-  chatEl.appendChild(div);
-  chatEl.scrollTop = chatEl.scrollHeight;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
 }
 
 function renderCommitments() {
@@ -297,7 +371,7 @@ function renderCommitments() {
   });
 }
 
-async function callCoach(userText, mode) {
+async function callCoach(userText, mode, history) {
   var resp = await fetch("/.netlify/functions/rita-coach", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -307,7 +381,7 @@ async function callCoach(userText, mode) {
       focusArea: state.focusArea,
       memory: state.memory,
       commitments: state.weekly_momentum.commitments,
-      history: state.history.slice(-12)
+      history: (history || state.history).slice(-12)
     })
   });
   var data = await resp.json().catch(function() { return {}; });
@@ -315,18 +389,19 @@ async function callCoach(userText, mode) {
   return data;
 }
 
+// COACHING SEND
 sendBtn.addEventListener("click", async function() {
   if (busy) return;
   var text = (msgEl.value || "").trim();
   if (!text) return;
   msgEl.value = "";
-  addBubble(text, "you");
+  addBubble(chatEl, text, "you");
   state.history.push({ role: "user", text: text });
-  await saveHistory("user", text);
+  await saveHistory("user", text, "coach");
   setBusy(true);
   setStatus("RITA is thinking…");
   try {
-    var data = await callCoach(text, "coach");
+    var data = await callCoach(text, "coach", state.history);
     if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       var newCommits = data.commitment_suggestions.slice(0, 3).map(function(t) {
@@ -337,22 +412,54 @@ sendBtn.addEventListener("click", async function() {
       await appendCommitments(newCommits);
       var notify = document.createElement("div");
       notify.className = "commit-notify";
-      notify.textContent = "✓ " + newCommits.length + " commitment" + (newCommits.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
+      notify.textContent = "✓ " + newCommits.length + " commitment" + (newCommits.length > 1 ? "s" : "") + " added to My Next Steps";
       chatEl.appendChild(notify);
       chatEl.scrollTop = chatEl.scrollHeight;
     }
     var reply = data.coach_message || "Tell me more.";
-    addBubble(reply, "rita");
+    addBubble(chatEl, reply, "rita");
     state.history.push({ role: "assistant", text: reply });
-    await saveHistory("assistant", reply);
+    await saveHistory("assistant", reply, "coach");
     renderCommitments();
     setStatus("");
   } catch(e) {
-    addBubble("Something went wrong. Please try again.", "rita");
+    addBubble(chatEl, "Something went wrong. Please try again.", "rita");
     setStatus("Error");
   } finally {
     setBusy(false);
   }
+});
+
+// JOURNAL SEND
+journalSendBtn.addEventListener("click", async function() {
+  if (journalBusy) return;
+  var text = (journalMsgEl.value || "").trim();
+  if (!text) return;
+  journalMsgEl.value = "";
+  addBubble(journalChatEl, text, "you");
+  state.journalHistory.push({ role: "user", text: text });
+  await saveHistory("user", text, "journal");
+  journalBusy = true;
+  journalSendBtn.disabled = true;
+  setJournalStatus("RITA is reflecting…");
+  try {
+    var data = await callCoach(text, "reflect", state.journalHistory);
+    var reply = data.coach_message || "Thank you for sharing that. What else comes to mind?";
+    addBubble(journalChatEl, reply, "rita");
+    state.journalHistory.push({ role: "assistant", text: reply });
+    await saveHistory("assistant", reply, "journal");
+    setJournalStatus("");
+  } catch(e) {
+    addBubble(journalChatEl, "Something went wrong. Please try again.", "rita");
+    setJournalStatus("Error");
+  } finally {
+    journalBusy = false;
+    journalSendBtn.disabled = false;
+  }
+});
+
+journalMsgEl.addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!journalBusy) journalSendBtn.click(); }
 });
 
 msgEl.addEventListener("keydown", function(e) {
@@ -365,11 +472,11 @@ checkinBtn.addEventListener("click", async function() {
   setBusy(true);
   setStatus("RITA is reviewing your week…");
   try {
-    var data = await callCoach("", "checkin");
+    var data = await callCoach("", "checkin", state.history);
     var reply = data.coach_message || "How did this week feel?";
-    addBubble(reply, "rita");
+    addBubble(chatEl, reply, "rita");
     state.history.push({ role: "assistant", text: reply });
-    await saveHistory("assistant", reply);
+    await saveHistory("assistant", reply, "coach");
     document.querySelector("[data-tab='chat']").click();
     setStatus("");
   } catch(e) {
@@ -384,11 +491,11 @@ newWeekBtn.addEventListener("click", async function() {
   setBusy(true);
   setStatus("Preparing your new week…");
   try {
-    var data = await callCoach("", "keep_or_reset");
+    var data = await callCoach("", "keep_or_reset", state.history);
     var reply = data.coach_message || "Would you like to keep or reset?";
-    addBubble(reply, "rita");
+    addBubble(chatEl, reply, "rita");
     state.history.push({ role: "assistant", text: reply });
-    await saveHistory("assistant", reply);
+    await saveHistory("assistant", reply, "coach");
     if (data.action === "reset_commitments") await clearCommitments();
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       await appendCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) {
@@ -412,9 +519,12 @@ resetBtn.addEventListener("click", async function() {
   await sb.from("conversation_history").delete().eq("user_id", currentUser.id);
   await clearCommitments();
   state.history = [];
+  state.journalHistory = [];
   state.focusArea = null;
   state.memory = { timeline_note: "", themes: [], interests: [], constraints: [], people: [] };
   chatEl.innerHTML = "";
+  journalChatEl.innerHTML = "";
+  journalOpened = false;
   renderCommitments();
   showFocusPicker();
 });

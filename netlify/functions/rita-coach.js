@@ -45,12 +45,6 @@ exports.handler = async (event) => {
     "Return STRICT JSON only — no markdown, no explanation outside the JSON."
   ].join(" ");
 
-  const journalActionAreas = ["Activity", "Time", "Connections", "Finance & Home"];
-  const isJournalAction = journalActionAreas.includes(focusArea);
-  const journalLimit = isJournalAction ? 2 : 3;
-  const journalUserCount = history.filter(function(m) { return m.role === "user" || m.role === "you"; }).length;
-  const isLastJournalExchange = journalUserCount >= journalLimit - 1;
-
   const modeInstructions = {
     returning: [
       "The user is returning to the focus area: " + focusArea + ".",
@@ -60,23 +54,30 @@ exports.handler = async (event) => {
       "Do NOT use the standard opener question. Make it feel like picking up with a trusted coach.",
       "Keep it to 2-3 sentences maximum."
     ].join(" "),
-    reflect: isLastJournalExchange
-      ? [
-          "This is the final exchange in the journal session for: " + focusArea + ".",
-          "Respond warmly to what the user just shared.",
-          "Then close the session gently — something like: 'Thank you for reflecting on this today. These thoughts matter, and I'll carry them with me. Come back anytime you want to explore this further.'",
-          "Do NOT ask another question. This is a closing message only.",
-          "Return an empty array for commitment_suggestions."
-        ].join(" ")
-      : [
-          "You are in journal/reflection mode for the focus area: " + focusArea + ".",
-          "Your tone shifts from forward-looking coach to warm, curious listener.",
-          "You are NOT suggesting actions or commitments. This is a space for the user to look back, process, and appreciate their journey.",
-          "Ask one warm, open-ended reflective question that invites the user to look back on their experience.",
-          "Examples: 'What surprised you most about this area of retirement?', 'What would you tell your pre-retirement self about this?', 'What moments stand out when you look back?'",
-          "Keep your response to 2-3 sentences. No action items. No commitment_suggestions.",
-          "Return an empty array for commitment_suggestions."
-        ].join(" "),
+    reflect: [
+      "You are in journal/reflection mode for the focus area: " + focusArea + ".",
+      "Your tone shifts from forward-looking coach to warm, curious listener.",
+      "You are NOT suggesting actions or commitments. This is a space for the user to look back, process, and appreciate their journey.",
+      "Ask one warm, open-ended reflective question that invites the user to look back on their experience.",
+      "Examples: 'What surprised you most about this area of retirement?', 'What would you tell your pre-retirement self about this?', 'What moments stand out when you look back?'",
+      "Keep your response to 2-3 sentences. No action items. No commitment_suggestions.",
+      "Return an empty array for commitment_suggestions."
+    ].join(" "),
+    reflect_closing: [
+      "The user has completed their journal exchanges for the focus area: " + focusArea + ".",
+      "Acknowledge what they shared in this final exchange warmly — one or two sentences.",
+      "Then ask: 'Is there anything else you'd like to include in this journal today? If not, your session is complete.'",
+      "Do NOT ask any other question. Only this closing prompt.",
+      "Return an empty array for commitment_suggestions."
+    ].join(" "),
+    reflect_final: [
+      "The user has responded to the closing prompt of their journal session for: " + focusArea + ".",
+      "If they shared something meaningful, acknowledge it warmly in one or two sentences.",
+      "If they indicated they are done (e.g. 'no', 'that's all', 'I'm done'), acknowledge that gracefully.",
+      "Always end with: 'Your journal entry for today is complete. These reflections matter, and I'll carry them with me. Come back anytime you want to explore this further.'",
+      "Do NOT ask any more questions. This is the final message.",
+      "Return an empty array for commitment_suggestions."
+    ].join(" "),
     reflect_returning: [
       "The user is returning to their journal for the focus area: " + focusArea + ".",
       "You have access to their prior journal entries.",

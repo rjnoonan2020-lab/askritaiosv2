@@ -2,22 +2,22 @@ const SUPABASE_URL = "https://wjubibjkasoattmbqurf.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdWJpYmprYXNvYXR0bWJxdXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0ODAyMDEsImV4cCI6MjA4ODA1NjIwMX0.djzKshGnvgxqmD6PiKP5tnW0gjgKdqHyQcA_MHTCqqs";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const chatEl        = document.getElementById("chat");
-const msgEl         = document.getElementById("msg");
-const sendBtn       = document.getElementById("send");
-const resetBtn      = document.getElementById("reset");
-const statusEl      = document.getElementById("status");
-const commitsEl     = document.getElementById("commitmentsList");
-const checkinBtn    = document.getElementById("checkin");
-const newWeekBtn    = document.getElementById("newWeek");
-const focusPicker   = document.getElementById("focusPicker");
-const coachUI       = document.getElementById("coachInterface");
-const focusBadge    = document.getElementById("focusBadge");
-const journalChatEl = document.getElementById("journalChat");
-const journalMsgEl  = document.getElementById("journalMsg");
-const journalSendBtn= document.getElementById("journalSend");
-const journalStatus = document.getElementById("journalStatus");
-const journalBadge  = document.getElementById("journalBadge");
+const chatEl         = document.getElementById("chat");
+const msgEl          = document.getElementById("msg");
+const sendBtn        = document.getElementById("send");
+const resetBtn       = document.getElementById("reset");
+const statusEl       = document.getElementById("status");
+const commitsEl      = document.getElementById("commitmentsList");
+const checkinBtn     = document.getElementById("checkin");
+const newWeekBtn     = document.getElementById("newWeek");
+const focusPicker    = document.getElementById("focusPicker");
+const coachUI        = document.getElementById("coachInterface");
+const focusBadge     = document.getElementById("focusBadge");
+const journalChatEl  = document.getElementById("journalChat");
+const journalMsgEl   = document.getElementById("journalMsg");
+const journalSendBtn = document.getElementById("journalSend");
+const journalStatus  = document.getElementById("journalStatus");
+const journalBadge   = document.getElementById("journalBadge");
 
 const FOCUS_OPENERS = {
   "Activity":       "Let's talk about staying active. How would you describe your current level of physical activity, and how does it make you feel?",
@@ -54,6 +54,8 @@ var FOCUS_AREAS = [
   { area: "Time",           emoji: "⏰" },
   { area: "Finance & Home", emoji: "🏠" }
 ];
+
+const JOURNAL_ACTION_AREAS = ["Activity", "Time", "Connections", "Finance & Home"];
 
 document.querySelectorAll(".nav-tab").forEach(function(tab) {
   tab.addEventListener("click", function() {
@@ -136,6 +138,9 @@ async function startFocusArea(area) {
   renderFocusSwitch(area);
   chatEl.innerHTML = "";
   journalChatEl.innerHTML = "";
+  journalMsgEl.disabled = false;
+  journalSendBtn.disabled = false;
+  journalMsgEl.placeholder = "Share your thoughts…";
   sendBtn.disabled = false;
   focusPicker.style.display = "none";
   coachUI.style.display = "block";
@@ -444,17 +449,28 @@ journalSendBtn.addEventListener("click", async function() {
   setJournalStatus("RITA is reflecting…");
   try {
     var data = await callCoach(text, "reflect", state.journalHistory);
-    var reply = data.coach_message || "Thank you for sharing that. What else comes to mind?";
+    var reply = data.coach_message || "Thank you for sharing that.";
     addBubble(journalChatEl, reply, "rita");
     state.journalHistory.push({ role: "assistant", text: reply });
     await saveHistory("assistant", reply, "journal");
     setJournalStatus("");
+
+    var journalLimit = JOURNAL_ACTION_AREAS.includes(state.focusArea) ? 2 : 3;
+    var userMessageCount = state.journalHistory.filter(function(m) { return m.role === "user"; }).length;
+
+    if (userMessageCount >= journalLimit) {
+      journalMsgEl.disabled = true;
+      journalSendBtn.disabled = true;
+      journalMsgEl.placeholder = "Journal session complete. Start a new focus area to reflect again.";
+    } else {
+      journalSendBtn.disabled = false;
+    }
   } catch(e) {
     addBubble(journalChatEl, "Something went wrong. Please try again.", "rita");
     setJournalStatus("Error");
+    journalSendBtn.disabled = false;
   } finally {
     journalBusy = false;
-    journalSendBtn.disabled = false;
   }
 });
 

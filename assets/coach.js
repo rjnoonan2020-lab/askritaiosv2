@@ -10,7 +10,6 @@ const statusEl    = document.getElementById("status");
 const commitsEl   = document.getElementById("commitmentsList");
 const checkinBtn  = document.getElementById("checkin");
 const newWeekBtn  = document.getElementById("newWeek");
-const signOutBtn  = document.getElementById("signOutBtn");
 const focusPicker = document.getElementById("focusPicker");
 const coachUI     = document.getElementById("coachInterface");
 const focusBadge  = document.getElementById("focusBadge");
@@ -46,7 +45,6 @@ document.querySelectorAll(".nav-tab").forEach(function(tab) {
     document.querySelectorAll(".nav-tab").forEach(function(t) { t.classList.remove("active"); });
     document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
     tab.classList.add("active");
-    { area: "Reflection", emoji: "🪞" },
     document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
   });
 });
@@ -73,6 +71,12 @@ async function initAuth() {
   var result = await sb.auth.getSession();
   if (!result.data.session) { window.location.href = "/login.html"; return; }
   currentUser = result.data.session.user;
+
+  document.getElementById("signOutBtn").addEventListener("click", async function() {
+    await sb.auth.signOut();
+    window.location.href = "/login.html";
+  });
+
   await loadState();
   renderCommitments();
   showFocusPicker();
@@ -114,7 +118,7 @@ async function startFocusArea(area) {
 
   if (priorHistory && priorHistory.length >= 2) {
     setBusy(true);
-    setStatus("RITA is preparing\u2026");
+    setStatus("RITA is preparing…");
     try {
       var resp = await fetch("/.netlify/functions/rita-coach", {
         method: "POST",
@@ -167,11 +171,6 @@ document.querySelectorAll(".focus-card").forEach(function(card) {
   card.addEventListener("click", function() {
     startFocusArea(card.dataset.area);
   });
-});
-
-signOutBtn.addEventListener("click", async function() {
-  await sb.auth.signOut();
-  window.location.href = "/login.html";
 });
 
 async function loadState() {
@@ -252,11 +251,6 @@ function addBubble(text, who) {
   chatEl.scrollTop = chatEl.scrollHeight;
 }
 
-function renderChat() {
-  chatEl.innerHTML = "";
-  state.history.forEach(function(m) { addBubble(m.text, m.role === "assistant" ? "rita" : "you"); });
-}
-
 function renderCommitments() {
   commitsEl.innerHTML = "";
   var commits = state.weekly_momentum.commitments;
@@ -265,7 +259,6 @@ function renderCommitments() {
     return;
   }
 
-  // Group by area
   var areas = [];
   var grouped = {};
   commits.forEach(function(c) {
@@ -331,20 +324,20 @@ sendBtn.addEventListener("click", async function() {
   state.history.push({ role: "user", text: text });
   await saveHistory("user", text);
   setBusy(true);
-  setStatus("RITA is thinking\u2026");
+  setStatus("RITA is thinking…");
   try {
     var data = await callCoach(text, "coach");
     if (data.memory_update) state.memory = Object.assign({}, state.memory, data.memory_update);
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       var newCommits = data.commitment_suggestions.slice(0, 3).map(function(t) {
-        var text = typeof t === "object" ? t.text : t;
+        var txt = typeof t === "object" ? t.text : t;
         var area = typeof t === "object" && t.area ? t.area : state.focusArea;
-        return { text: text, status: "not_started", area: area };
+        return { text: txt, status: "not_started", area: area };
       });
       await appendCommitments(newCommits);
       var notify = document.createElement("div");
       notify.className = "commit-notify";
-      notify.textContent = "\u2713 " + newCommits.length + " commitment" + (newCommits.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
+      notify.textContent = "✓ " + newCommits.length + " commitment" + (newCommits.length > 1 ? "s" : "") + " added to your Weekly Momentum tab";
       chatEl.appendChild(notify);
       chatEl.scrollTop = chatEl.scrollHeight;
     }
@@ -370,7 +363,7 @@ checkinBtn.addEventListener("click", async function() {
   if (busy) return;
   if (!state.weekly_momentum.commitments.length) { setStatus("No commitments yet."); return; }
   setBusy(true);
-  setStatus("RITA is reviewing your week\u2026");
+  setStatus("RITA is reviewing your week…");
   try {
     var data = await callCoach("", "checkin");
     var reply = data.coach_message || "How did this week feel?";
@@ -389,7 +382,7 @@ checkinBtn.addEventListener("click", async function() {
 newWeekBtn.addEventListener("click", async function() {
   if (busy) return;
   setBusy(true);
-  setStatus("Preparing your new week\u2026");
+  setStatus("Preparing your new week…");
   try {
     var data = await callCoach("", "keep_or_reset");
     var reply = data.coach_message || "Would you like to keep or reset?";
@@ -399,9 +392,9 @@ newWeekBtn.addEventListener("click", async function() {
     if (data.action === "reset_commitments") await clearCommitments();
     if (Array.isArray(data.commitment_suggestions) && data.commitment_suggestions.length) {
       await appendCommitments(data.commitment_suggestions.slice(0, 3).map(function(t) {
-        var text = typeof t === "object" ? t.text : t;
+        var txt = typeof t === "object" ? t.text : t;
         var area = typeof t === "object" && t.area ? t.area : state.focusArea;
-        return { text: text, status: "not_started", area: area };
+        return { text: txt, status: "not_started", area: area };
       }));
     }
     renderCommitments();

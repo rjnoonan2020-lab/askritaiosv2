@@ -23,12 +23,6 @@
     <div id="focusPicker">
       <p class="focus-prompt">What would you like to focus on today?</p>
       <div class="focus-grid">
-
-        <button class="focus-card" data-area="Reflection" data-emoji="🪞">
-          <span class="focus-emoji">🪞</span>
-          <span class="focus-label">Reflection</span>
-          <span class="focus-sub">How has your retirement journey gone?</span>
-        </button>
         <button class="focus-card" data-area="Activity" data-emoji="🏃">
           <span class="focus-emoji">🏃</span>
           <span class="focus-label">Activity</span>
@@ -74,7 +68,6 @@
           <span class="focus-label">Finance & Home</span>
           <span class="focus-sub">Your relationship with money and home.</span>
         </button>
-
       </div>
     </div>
 
@@ -83,8 +76,10 @@
       <div class="nav-tabs">
         <button class="nav-tab active" data-tab="chat">My Weekly Session</button>
         <button class="nav-tab" data-tab="momentum">My Next Steps</button>
+        <button class="nav-tab" data-tab="journal">My Journal</button>
       </div>
 
+      <!-- MY WEEKLY SESSION TAB -->
       <div class="tab-panel active" id="tab-chat">
         <div class="focus-badge" id="focusBadge"></div>
         <div class="chat" id="chat"></div>
@@ -104,11 +99,26 @@
         <div class="focus-switch" id="focusSwitch"></div>
       </div>
 
+      <!-- MY NEXT STEPS TAB -->
       <div class="tab-panel" id="tab-momentum">
         <div id="commitmentsList"></div>
         <div class="checkin-area">
           <button class="btn" id="checkin" type="button">How did I do this week?</button>
           <button class="btn secondary" id="newWeek" type="button">Start fresh for next week</button>
+        </div>
+      </div>
+
+      <!-- MY JOURNAL TAB -->
+      <div class="tab-panel" id="tab-journal">
+        <div class="focus-badge" id="journalBadge"></div>
+        <p class="journal-intro">This is your space to reflect on your journey. RITA will ask thoughtful questions to help you look back, notice patterns, and appreciate how far you've come.</p>
+        <div class="chat" id="journalChat"></div>
+        <div class="status-bar" id="journalStatus"></div>
+        <div class="input-dock">
+          <textarea id="journalMsg" rows="2" placeholder="Share your thoughts…"></textarea>
+          <button class="send-btn" id="journalSend">
+            <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
         </div>
       </div>
 

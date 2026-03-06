@@ -478,16 +478,33 @@ journalSendBtn.addEventListener("click", async function() {
       journalSendBtn.disabled = true;
       journalMsgEl.placeholder = "Journal session complete. Start a new focus area to reflect again.";
     } else if (journalAwaitingClosing) {
-      // User responded to closing prompt — next is the final message
+      // User responded to closing prompt — next is the final acknowledgment
       journalAwaitingClosing = false;
       journalAwaitingFinal = true;
       journalSendBtn.disabled = false;
       journalMsgEl.placeholder = "Share a final thought, or type 'done' to complete your session…";
     } else if (userMessageCount >= journalLimit) {
-      // Cap reached — next exchange is the closing prompt
+      // Cap reached — automatically trigger closing prompt from RITA
       journalAwaitingClosing = true;
-      journalSendBtn.disabled = false;
-      journalMsgEl.placeholder = "Is there anything else you'd like to add?";
+      setJournalStatus("RITA is reflecting…");
+      journalSendBtn.disabled = true;
+      try {
+        var closingData = await callCoach("", "reflect_closing", state.journalHistory);
+        var closingReply = closingData.coach_message || "Is there anything else you'd like to include in this journal today? If not, your session is complete.";
+        addBubble(journalChatEl, closingReply, "rita");
+        state.journalHistory.push({ role: "assistant", text: closingReply });
+        await saveHistory("assistant", closingReply, "journal");
+        setJournalStatus("");
+        journalMsgEl.placeholder = "Share a final thought, or press send when you're done…";
+        journalSendBtn.disabled = false;
+      } catch(e) {
+        var fallbackClosing = "Is there anything else you'd like to include in this journal today? If not, your session is complete.";
+        addBubble(journalChatEl, fallbackClosing, "rita");
+        state.journalHistory.push({ role: "assistant", text: fallbackClosing });
+        await saveHistory("assistant", fallbackClosing, "journal");
+        setJournalStatus("");
+        journalSendBtn.disabled = false;
+      }
     } else {
       journalSendBtn.disabled = false;
     }

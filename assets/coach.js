@@ -460,11 +460,6 @@ journalSendBtn.addEventListener("click", async function() {
   try {
     var journalLimit = JOURNAL_ACTION_AREAS.includes(state.focusArea) ? 2 : 3;
 
-    // Increment session count only for current session messages
-    if (!journalAwaitingClosing && !journalAwaitingFinal) {
-      journalSessionCount++;
-    }
-
     var mode;
     if (journalAwaitingFinal) {
       mode = "reflect_final";
@@ -472,6 +467,7 @@ journalSendBtn.addEventListener("click", async function() {
       mode = "reflect_closing";
     } else {
       mode = "reflect";
+      journalSessionCount++;
     }
 
     var data = await callCoach(text, mode, state.journalHistory);
@@ -493,27 +489,10 @@ journalSendBtn.addEventListener("click", async function() {
       journalSendBtn.disabled = false;
       journalMsgEl.placeholder = "Share a final thought, or type 'done' to complete your session…";
     } else if (journalSessionCount >= journalLimit) {
-      // Cap reached — automatically trigger closing prompt from RITA
+      // Cap reached — RITA's NEXT response will be the closing prompt
       journalAwaitingClosing = true;
-      setJournalStatus("RITA is reflecting…");
-      journalSendBtn.disabled = true;
-      try {
-        var closingData = await callCoach("", "reflect_closing", state.journalHistory);
-        var closingReply = closingData.coach_message || "Is there anything else you'd like to include in this journal today? If not, your session is complete.";
-        addBubble(journalChatEl, closingReply, "rita");
-        state.journalHistory.push({ role: "assistant", text: closingReply });
-        await saveHistory("assistant", closingReply, "journal");
-        setJournalStatus("");
-        journalMsgEl.placeholder = "Share a final thought, or press send when you're done…";
-        journalSendBtn.disabled = false;
-      } catch(e) {
-        var fallbackClosing = "Is there anything else you'd like to include in this journal today? If not, your session is complete.";
-        addBubble(journalChatEl, fallbackClosing, "rita");
-        state.journalHistory.push({ role: "assistant", text: fallbackClosing });
-        await saveHistory("assistant", fallbackClosing, "journal");
-        setJournalStatus("");
-        journalSendBtn.disabled = false;
-      }
+      journalSendBtn.disabled = false;
+      journalMsgEl.placeholder = "Share a final thought, or press send when you're done…";
     } else {
       journalSendBtn.disabled = false;
     }

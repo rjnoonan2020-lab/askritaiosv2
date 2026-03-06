@@ -24,6 +24,7 @@ const FOCUS_OPENERS = {
   "Learning":       "Keeping your mind engaged is a gift you give yourself. What are you curious about learning or exploring right now?",
   "Contribution":   "Giving back can bring deep fulfillment. What causes, people, or communities do you feel called to contribute to right now?",
   "Time":           "Time is your most valuable asset in retirement. How are you feeling about the way you're spending your days — is it intentional, or does it feel unstructured?",
+  "Reflection": "Taking time to reflect is one of the most valuable things you can do in retirement. How would you say your retirement has gone so far — what's felt right, and what's surprised you?",
   "Finance & Home": "Your relationship with money and your living situation shapes so much of retirement. What feels settled, and what feels uncertain in this area?"
 };
 
@@ -44,6 +45,7 @@ document.querySelectorAll(".nav-tab").forEach(function(tab) {
     document.querySelectorAll(".nav-tab").forEach(function(t) { t.classList.remove("active"); });
     document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
     tab.classList.add("active");
+    { area: "Reflection", emoji: "🪞" },
     document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
   });
 });

@@ -83,6 +83,7 @@ var journalBusy = false;
 var journalOpened = false;
 var journalAwaitingClosing = false;
 var journalAwaitingFinal = false;
+var journalSessionCount = 0;  // tracks only current session messages
 
 function getWeekOf() {
   var now = new Date();
@@ -135,6 +136,7 @@ async function startFocusArea(area) {
   journalOpened = false;
   journalAwaitingClosing = false;
   journalAwaitingFinal = false;
+  journalSessionCount = 0;
   focusBadge.textContent = area;
   focusBadge.style.display = "inline-block";
   journalBadge.textContent = area + " — Journal";
@@ -192,10 +194,13 @@ async function startFocusArea(area) {
 async function startJournal() {
   if (!state.focusArea || journalOpened) return;
   journalOpened = true;
+  journalSessionCount = 0;
   var area = state.focusArea;
   var priorJournal = await loadAreaHistory(area, "journal");
 
+  // Load prior history into journalHistory for RITA context only
   if (priorJournal && priorJournal.length >= 2) {
+    state.journalHistory = priorJournal.slice(-8);
     setJournalStatus("RITA is preparing your journal…");
     try {
       var resp = await fetch("/.netlify/functions/rita-coach", {
@@ -454,7 +459,11 @@ journalSendBtn.addEventListener("click", async function() {
 
   try {
     var journalLimit = JOURNAL_ACTION_AREAS.includes(state.focusArea) ? 2 : 3;
-    var userMessageCount = state.journalHistory.filter(function(m) { return m.role === "user"; }).length;
+
+    // Increment session count only for current session messages
+    if (!journalAwaitingClosing && !journalAwaitingFinal) {
+      journalSessionCount++;
+    }
 
     var mode;
     if (journalAwaitingFinal) {
@@ -483,7 +492,7 @@ journalSendBtn.addEventListener("click", async function() {
       journalAwaitingFinal = true;
       journalSendBtn.disabled = false;
       journalMsgEl.placeholder = "Share a final thought, or type 'done' to complete your session…";
-    } else if (userMessageCount >= journalLimit) {
+    } else if (journalSessionCount >= journalLimit) {
       // Cap reached — automatically trigger closing prompt from RITA
       journalAwaitingClosing = true;
       setJournalStatus("RITA is reflecting…");
@@ -586,6 +595,7 @@ resetBtn.addEventListener("click", async function() {
   journalOpened = false;
   journalAwaitingClosing = false;
   journalAwaitingFinal = false;
+  journalSessionCount = 0;
   renderCommitments();
   showFocusPicker();
 });

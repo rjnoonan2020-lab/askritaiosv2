@@ -10,15 +10,19 @@ function initSupabase() {
     if (result.data.session) window.location.href = "/coach.html";
   });
 
-  document.getElementById("signInBtn").addEventListener("click", async function() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-    if (!email || !password) { setStatus("Please enter email and password."); return; }
-    setStatus("Signing in…");
-    const result = await sb.auth.signInWithPassword({ email: email, password: password });
-    if (result.error) { setStatus(result.error.message); return; }
-    window.location.href = "/coach.html";
-  });
+  document.getElementById("signUpBtn").addEventListener("click", async function() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  if (!email || !password) { setStatus("Please enter email and password."); return; }
+  if (password.length < 6) { setStatus("Password must be at least 6 characters."); return; }
+  setStatus("Creating account…");
+  const result = await sb.auth.signUp({ email: email, password: password });
+  if (result.error) { setStatus(result.error.message); return; }
+  // Auto sign in immediately after sign up
+  const signIn = await sb.auth.signInWithPassword({ email: email, password: password });
+  if (signIn.error) { setStatus("Account created! Please sign in."); return; }
+  window.location.href = "/coach.html";
+});
 
   document.getElementById("signUpBtn").addEventListener("click", async function() {
     const email = document.getElementById("email").value.trim();
